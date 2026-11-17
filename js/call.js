@@ -3,6 +3,9 @@
   const PP = window.PP;
   const pad = document.getElementById("pad"), cover = document.getElementById("cover"), stat = document.getElementById("stat");
   const USAGE = "paperphone.envelope.usage";
+  // demo.html shows this page inside a drawn phone: no full screen, no real call
+  const DEMO = /[?&]demo=1/.test(location.search);
+  const tell = (msg) => { if (DEMO && window.parent !== window) window.parent.postMessage(Object.assign({ paperphone: true }, msg), "*"); };
   let number = "", running = false, startedAt = 0, audio = null, wake = null, busy = false;
 
   // ---- sound: real DTMF pairs --------------------------------------------------
@@ -44,6 +47,7 @@
   }
   function setNumber(n) {
     number = n;
+    tell({ type: "number", number });
     els.call.classList.toggle("ready", number.length >= 3);
   }
 
@@ -51,6 +55,7 @@
   pad.addEventListener("pointerdown", (e) => {
     const id = e.target.dataset && e.target.dataset.id;
     if (!id || busy) return;
+    if (DEMO && !audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (err) { audio = null; } }
     if (id === "call") {
       held = false;
       holdTimer = setTimeout(() => { held = true; setNumber(""); tone([300], 350); flash("call", 400); }, 650);
@@ -67,10 +72,11 @@
   pad.addEventListener("contextmenu", (e) => e.preventDefault());
 
   function call() {
-    if (number.length < 3) { tone([200], 200); return; }
+    if (number.length < 3) { tone([200], 200); tell({ type: "short" }); return; }
     flash("call", 500);
     const dial = number;
     setNumber("");
+    if (DEMO) return tell({ type: "call", number: dial });
     window.location.href = "tel:" + encodeURIComponent(dial).replace(/%2A/gi, "*");
   }
 
@@ -120,6 +126,14 @@
     document.getElementById("start").textContent = resume ? "Continue" : "Start";
     stat.textContent = usageLine();
     cover.hidden = false;
+  }
+
+  if (DEMO) {
+    document.documentElement.classList.add("demo");
+    cover.hidden = true;
+    window.addEventListener("resize", layout);
+    layout();
+    return;
   }
 
   const exit = document.createElement("button");

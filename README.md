@@ -35,6 +35,7 @@ Switch from **Folded booklet** to **Phone envelope** to print a paper sleeve for
 * Sized for the Samsung Galaxy A08 by default (167.4 × 77.4 × 8 mm, 6.7 inch 20:9 screen), with a Pixel 3a preset and fields for any other phone.
 * A keypad is printed on the front, over the screen. The back carries any two Paper Phone panels, such as your contacts and today's calendar.
 * On the phone, open `call.html` and press Start. The keys glow through the paper, play dial tones, and the lower circle flashes the time digit by digit. The page shows how long you spent in the envelope today.
+* `demo.html` lets you try it on a computer: a Galaxy A08 drawn to scale inside its envelope, with clickable keys that glow through the paper. No call is made.
 * The printed keys and the glowing keys come from the same layout (`js/keypad.js`), measured as fractions of the screen, so they line up when the page is full screen. Where the screen starts below the top edge of the phone is an estimate for the A08; adjust "Screen starts" if the circles are off.
 
 Limits of a web page, compared with the Android app: it cannot place a call itself, so the call key hands the number to the phone's own dialler, which may need one more tap; and it cannot answer incoming calls.
