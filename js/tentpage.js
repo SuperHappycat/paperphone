@@ -6,6 +6,9 @@
   const $ = (id) => document.getElementById(id);
   const lights = $("lights"), cover = $("cover");
   const FIVE_MIN = /[?&]fast=1/.test(location.search) ? 3000 : 5 * 60 * 1000; // ?fast=1 is for trying it out
+  // tent-demo.html shows this page inside a drawn phone: no full screen, no sensors, nothing saved
+  const DEMO = /[?&]demo=1/.test(location.search);
+  const tell = (msg) => { if (DEMO && window.parent !== window) window.parent.postMessage(Object.assign({ paperphone: true }, msg), "*"); };
   const LAST = "paperphone.tent.last";
 
   let people = Math.max(2, Math.min(8, parseInt((location.hash.match(/n=(\d+)/) || [])[1], 10) || 4));
@@ -36,6 +39,7 @@
   function drawTrack() {
     if (stage !== "meal") return;
     const lit = Math.min(12, Math.floor((Date.now() - startedAt) / FIVE_MIN));
+    if (DEMO && lit !== drawTrack.told) { drawTrack.told = lit; tell({ type: "dots", lit }); }
     for (let i = 0; i < 12; i++) if (els["t" + i]) els["t" + i].classList.toggle("on", i < lit);
   }
 
@@ -53,6 +57,7 @@
   // ---- who's next: the light runs along the names and settles on one ------------------
   function spin() {
     if (spinning || stage !== "meal") return;
+    if (DEMO && !audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (err) { audio = null; } }
     spinning = true;
     const target = Math.floor(Math.random() * people), hops = people * 2 + target + 1;
     let i = -1, delay = 70;
@@ -65,6 +70,7 @@
       beep(700, 40, 0.05);
       if (i + 1 < hops) { delay *= 1.13; setTimeout(hop, delay); return; }
       beep(1050, 260, 0.12);
+      tell({ type: "picked", index: target });
       els.next.classList.remove("on");
       setTimeout(() => { clear(); spinning = false; }, 6000); // the chosen name stays lit for a while
     })();
@@ -93,6 +99,12 @@
     if (stage !== "meal") return;
     stage = "done";
     clearInterval(ticker);
+    if (DEMO) {
+      beep(880, 180, 0.15); setTimeout(() => beep(660, 320, 0.15), 200);
+      lights.innerHTML = "";
+      // in the demo five minutes pass every three seconds, so report the pretend length
+      return tell({ type: "end", minutes: Math.max(1, Math.round(((Date.now() - startedAt) / FIVE_MIN) * 5)) });
+    }
     window.removeEventListener("devicemotion", onMotion);
     if (wake) { wake.release().catch(() => {}); wake = null; }
     const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
@@ -151,6 +163,19 @@
     layout();
     window.addEventListener("devicemotion", onMotion);
     ticker = setInterval(drawTrack, 1000);
+  }
+
+  if (DEMO) {
+    cover.hidden = true;
+    const begin = () => { stage = "meal"; startedAt = Date.now(); drawTrack.told = -1; layout(); clearInterval(ticker); ticker = setInterval(drawTrack, 250); };
+    window.addEventListener("message", (e) => {
+      if (e.source !== window.parent || !e.data || !e.data.paperphone) return;
+      if (e.data.type === "pickup") endMeal();
+      if (e.data.type === "restart") begin();
+    });
+    window.addEventListener("resize", () => { if (stage === "meal") layout(); });
+    begin();
+    return;
   }
 
   $("start").addEventListener("click", () => {

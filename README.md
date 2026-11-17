@@ -60,6 +60,7 @@ A third sheet, new to this fork, in the same spirit as the two experiments: a fo
 * The last phone lies on top of the pile, screen up, and the tent rests on it. A code printed on the tent opens `tent.html` on that phone, which lights the printed circles through the paper: tap “who's next” and a light runs along the names and stops on one; a row of dots lights one every five minutes; and when a phone is picked up it chimes and the meal is over.
 * The length of the meal is kept on the phone, and the next tent designed on that phone prints it.
 * Important calls: the tent page asks everyone to switch on Do Not Disturb with starred contacts allowed, so those callers still ring. The Android app goes further on the top phone: you choose the callers who may ring, the tent's “call” circle pulses for them and a tap answers on the loudspeaker, and everyone else is silenced and counted.
+* `tent-demo.html` lets you try it on a computer: the tent seen from above, with a clickable “who's next”, dots that fill quickly, and a button that picks up a phone.
 * `tent.html?fast=1` runs the five-minute dots every three seconds, for trying it out.
 
 ## Privacy

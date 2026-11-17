@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%277%27 y=%272%27 width=%2718%27 height=%2728%27 fill=%27%23fff%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3Cpath d=%27M11 9h10M11 14h10M11 19h6%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Table tent demo – Paper Phone</title>
+<meta name="description" content="Try the Paper Phone table tent on a computer: a phone under a paper tent that picks who is next and counts the meal.">
+<link rel="stylesheet" href="css/app.css">
+<style>
+.demo-app { display: grid; grid-template-columns: minmax(300px, 400px) 1fr; min-height: 100vh; }
+.demo-text { padding: 28px 28px 40px; border-right: 1px solid var(--line); }
+.demo-text h1 { font-size: 2.2rem; line-height: 1.08; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 12px; }
+.demo-text p { margin: 0 0 12px; max-width: 34em; }
+.demo-text ul { margin: 0 0 14px; padding-left: 1.1em; }
+.demo-text li { margin-bottom: 6px; }
+.demo-text a { color: inherit; }
+.readout { border: 1px solid var(--ink); padding: 12px 14px; margin: 18px 0; min-height: 5.6em; }
+.readout b { display: block; font: 400 1.5rem/1.3 var(--display); letter-spacing: .04em; min-height: 1.3em; }
+.readout span { font-size: .85rem; color: var(--soft); }
+.stage { display: flex; justify-content: center; align-items: flex-start; padding: 40px 14px; position: static; height: auto; min-height: 100vh; overflow: auto; }
+/* seen from above, 3.6 px to the millimetre: the flat top with the two long sides sloping away */
+.tent { position: relative; width: 693px; height: 435px; flex: none; }
+.phone { position: absolute; left: 45px; top: 78px; width: 603px; height: 279px; background: #16181b; border-radius: 30px; box-shadow: 0 16px 34px rgba(0,0,0,.35); overflow: hidden; }
+.phone iframe { position: absolute; left: 167px; top: -140px; width: 251px; height: 559px; border: 0; border-radius: 14px; background: #000; transform: rotate(-90deg); }
+.paper, .ink { position: absolute; inset: 0; pointer-events: none; transition: transform .45s ease, opacity .45s ease; }
+.paper { mix-blend-mode: screen; }
+.paper i { position: absolute; display: block; }
+.paper .top { left: 40px; top: 70px; width: 613px; height: 295px; background: #e7e4dc; }
+.paper .side { left: 0; width: 693px; height: 70px; background: #d6d2c8; }
+.paper .side.far { top: 0; clip-path: polygon(6% 0, 94% 0, 100% 100%, 0 100%); }
+.paper .side.near { top: 365px; clip-path: polygon(0 0, 100% 0, 94% 100%, 6% 100%); }
+.paper .end { top: 70px; width: 40px; height: 295px; background: #cdc9be; }
+.paper .end.l { left: 0; } .paper .end.r { left: 653px; }
+.ink svg { display: block; width: 100%; height: 100%; }
+.tent.lifted .paper, .tent.lifted .ink { transform: translateY(-110%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .paper, .ink { transition: none; } }
+@media (max-width: 1150px) { .demo-app { grid-template-columns: 1fr; } .demo-text { border-right: 0; padding: 22px 16px; } .stage { min-height: 0; justify-content: flex-start; } }
+</style>
+</head>
+<body>
+<main class="demo-app">
+  <div class="demo-text">
+    <h1>Table tent demo</h1>
+    <p>You are looking down at a dinner table. A Samsung Galaxy A08 lies on top of the pile of phones with the paper tent over it. Its screen lights the printed circles through the paper.</p>
+    <ul>
+      <li>Click “who’s next”. A light runs along the names and stops on one.</li>
+      <li>Watch the row of dots: one lights every five minutes of the meal. Here, five minutes pass every three seconds.</li>
+      <li>Pick up a phone to end the meal.</li>
+    </ul>
+    <div class="readout" role="status" aria-live="polite">
+      <b id="big">The meal has started</b>
+      <span id="line">Nothing on the tent shows a clock or a number. This box is only here for the demo.</span>
+    </div>
+    <div class="row">
+      <button type="button" class="primary" id="pickup">Pick up a phone</button>
+      <button type="button" id="lift" aria-pressed="false">Take the paper off</button>
+    </div>
+    <div class="row">
+      <a class="filebtn" href="index.html">Print your own tent</a>
+      <a class="filebtn" href="demo.html">Try the envelope</a>
+    </div>
+    <p class="note">The “call” circle stays dark here. On a phone with the Android app it pulses when one of your chosen callers rings.</p>
+  </div>
+  <div class="mat stage">
+    <div class="tent" id="tent">
+      <div class="phone"><iframe id="screen" src="tent.html?demo=1&amp;fast=1#n=4" title="Phone screen with the tent lights"></iframe></div>
+      <div class="paper"><i class="side far"></i><i class="top"></i><i class="side near"></i><i class="end l"></i><i class="end r"></i></div>
+      <div class="ink" id="ink"></div>
+    </div>
+  </div>
+</main>
+<script src="js/keypad.js"></script>
+<script>
+(function () {
+  var NAMES = ["Ann", "Ben", "Cleo", "Dan"];
+  var phone = PP.PHONES.a08, scr = PP.screenSize(phone.diag, phone.ratio), k = 3.6;
+  var ox = 40 + (1.5 + phone.bezel) * k, oy = 70 + (295 - scr.w * k) / 2; // where the screen sits under the top, px
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 693 435" fill="none" stroke="#1d1d1d" stroke-width="1.1" font-family="Varela, sans-serif">';
+  var T = function (s, x, y, size, extra) { return '<text x="' + x + '" y="' + y + '" font-size="' + size + '" fill="#1d1d1d" stroke="none" ' + (extra || "") + ">" + s + "</text>"; };
+  PP.tentLayout(NAMES.length, scr.h * k, scr.w * k).forEach(function (it) {
+    var cx = ox + it.x, cy = oy + it.y;
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + it.r + '"' + (it.id[0] === "t" ? ' stroke-width=".7"' : "") + "/>";
+    if (it.id[0] === "p") svg += T(NAMES[+it.id.slice(1)], cx, cy + it.r + 18, 12, 'text-anchor="middle"');
+    if (it.id === "next") svg += T("WHO’S", cx, cy - 1, 7.5, 'text-anchor="middle" letter-spacing="1.2"') + T("NEXT", cx, cy + 9, 7.5, 'text-anchor="middle" letter-spacing="1.2"');
+    if (it.id === "call") svg += T("CALL", cx, cy + 3, 7.5, 'text-anchor="middle" letter-spacing="1.6"');
+  });
+  // the two long sides, as they look from above: the far one reads from the other side of the table
+  svg += T("What made you laugh today?", 60, 408, 19);
+  svg += '<g transform="rotate(180 346.5 35)">' + T("One word at a time", 60, 43, 17) + "</g>";
+  svg += '<path d="M40 70H653M40 365H653M40 70V365M653 70V365" stroke-width=".6"/>';
+  document.getElementById("ink").innerHTML = svg + "</svg>";
+
+  var big = document.getElementById("big"), line = document.getElementById("line"), frame = document.getElementById("screen");
+  var pickup = document.getElementById("pickup"), over = false;
+  window.addEventListener("message", function (e) {
+    if (e.source !== frame.contentWindow || !e.data || !e.data.paperphone) return;
+    var m = e.data;
+    if (m.type === "picked") { big.textContent = NAMES[m.index] + " is next"; line.textContent = "The circle above that name stays lit for a few seconds."; }
+    else if (m.type === "dots" && !over) {
+      if (m.lit > 0) line.textContent = m.lit + (m.lit === 1 ? " dot is lit: " : " dots are lit: ") + m.lit * 5 + " minutes at the table.";
+    } else if (m.type === "end") {
+      over = true;
+      big.textContent = "The meal is over";
+      line.textContent = m.minutes + " minutes at the table before a phone was picked up. The next tent you print would say so.";
+      pickup.textContent = "Start another meal";
+    }
+  });
+  pickup.addEventListener("click", function () {
+    if (over) {
+      over = false;
+      frame.contentWindow.postMessage({ paperphone: true, type: "restart" }, "*");
+      big.textContent = "The meal has started"; line.textContent = "Click “who’s next” on the tent.";
+      pickup.textContent = "Pick up a phone";
+    } else frame.contentWindow.postMessage({ paperphone: true, type: "pickup" }, "*");
+  });
+  var lift = document.getElementById("lift"), tent = document.getElementById("tent");
+  lift.addEventListener("click", function () {
+    var off = tent.classList.toggle("lifted");
+    lift.setAttribute("aria-pressed", String(off));
+    lift.textContent = off ? "Put the paper back" : "Take the paper off";
+  });
+})();
+</script>
+</body>
+</html>
