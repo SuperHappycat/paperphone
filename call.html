@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Envelope keypad – Paper Phone</title>
+<style>
+@font-face { font-family: Varela; src: url(fonts/varela_regular.otf) format("opentype"); }
+@font-face { font-family: "Work Sans"; src: url(fonts/worksans_regular.ttf) format("truetype"); }
+html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: hidden; font: 16px/1.5 "Work Sans", sans-serif;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+#pad { position: fixed; inset: 0; }
+.key { position: absolute; border-radius: 50%; border: 0; padding: 0; background: #fff; opacity: .3; transform: translate(-50%, -50%);
+  font: 0/0 a; color: transparent; }
+.key.lit { opacity: 1; }
+.key[data-id="call"].ready { opacity: .8; }
+#exit { position: absolute; left: 8%; top: 4%; width: 44px; height: 44px; background: none; border: 0; color: #777; font-size: 26px; }
+#cover { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; padding: 8vw; gap: 14px; overflow: auto; }
+#cover.resume { background: #fff; color: #000; }
+#cover.resume .long { display: none; }
+#cover h1 { font: 400 1.7rem/1.15 Varela, sans-serif; letter-spacing: .06em; margin: 0; }
+#cover p { margin: 0; max-width: 34em; }
+#cover button, #cover a.btn { font: 1rem Varela, sans-serif; letter-spacing: .04em; padding: 14px 20px; border: 1.5px solid currentColor; background: #f3c53a; color: #000; align-self: flex-start; text-decoration: none; }
+#cover a { color: inherit; }
+#stat { color: #bbb; min-height: 1.5em; }
+#cover.resume #stat { color: #333; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid #6aa9ff; outline-offset: 3px; }
+</style>
+</head>
+<body>
+<div id="pad" aria-label="Phone keypad"></div>
+<div id="cover">
+  <h1 id="heading">Envelope keypad</h1>
+  <p class="long">Open this page on the phone that goes in the envelope. Press Start, slide the phone into the envelope screen first, and the keys glow through the paper.</p>
+  <p class="long">Tap digits to dial, then the large circle to call. Hold the large circle to clear the number. The lower circle flashes the time on the keypad, digit by digit.</p>
+  <p class="long">Calling hands the number to your phone’s own dialler, which may ask for one more tap on its call button. A web page is not allowed to place the call itself.</p>
+  <button id="start" type="button">Start</button>
+  <p id="stat" role="status"></p>
+  <p class="long"><a href="index.html">Back to Paper Phone</a> to print the envelope.</p>
+</div>
+<script src="js/keypad.js"></script>
+<script src="js/call.js"></script>
+</body>
+</html>

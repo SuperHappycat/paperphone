@@ -16,7 +16,8 @@
 
   function defaults() {
     return {
-      name: "", date: today(), paper: "A4",
+      name: "", date: today(), paper: "A4", sheet: "booklet",
+      env: Object.assign({ model: "a08", backTop: "contacts", backBottom: "calendar" }, PP.PHONES.a08),
       on: { contacts: true, calendar: true, tasks: true, photo: false, notes: true, weather: false, paperapp: true, maps: false, contactless: false },
       contacts: [], events: [], tasks: [], photo: "", notesText: "",
       weather: { query: "", place: "", lat: null, lon: null, unit: "C", data: null },
@@ -61,8 +62,17 @@
   // ---- preview ---------------------------------------------------------------
   function render() {
     $("#pages").innerHTML = PP.renderPages(state).map((p, i) => `<figure class="page"><figcaption>${i ? "Back" : "Front"}</figcaption>${p}</figure>`).join("");
-    $("#pages").classList.toggle("two", state.on.maps);
-    $("#pagesize").textContent = `@page { size: ${state.paper === "Letter" ? "letter" : "A4"} landscape; margin: 0; }`;
+    const env = state.sheet === "envelope";
+    $("#pages").classList.toggle("two", state.on.maps && !env);
+    $("#pages").classList.toggle("portrait", env);
+    $(".controls").classList.toggle("is-envelope", env);
+    $$("[data-sheet]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sheet === state.sheet)));
+    $$("[data-when]").forEach((el) => { el.hidden = el.dataset.when !== state.sheet; });
+    $("#pagesize").textContent = `@page { size: ${state.paper === "Letter" ? "letter" : "A4"} ${env ? "portrait" : "landscape"}; margin: 0; }`;
+    if (env) {
+      const g = PP.envelopeFit(state), sc = PP.screenSize(state.env.diag, state.env.ratio);
+      say("env", g.fits ? `Envelope ${Math.round(g.totalW)} × ${Math.round(g.totalH)} mm, screen ${sc.w.toFixed(1)} × ${sc.h.toFixed(1)} mm. Fits on ${state.paper}.` : `Too large for one ${state.paper} sheet.`, !g.fits);
+    }
     hints();
   }
   function hints() {
@@ -81,7 +91,7 @@
     $$(".mod").forEach((m) => {
       const id = m.dataset.mod;
       $(".dot", m).setAttribute("aria-pressed", String(!!state.on[id]));
-      $(".hint", m).textContent = state.on[id] ? h[id] : "not printed";
+      $(".hint", m).textContent = state.sheet === "envelope" || state.on[id] ? h[id] : "not printed";
     });
     $$("[data-show]").forEach((el) => {
       const k = state.paperapp.classic ? "" : state.paperapp.kind;
@@ -92,13 +102,22 @@
 
   // ---- simple bound fields -----------------------------------------------------
   function fillFields() {
-    $$("[data-bind]").forEach((el) => { el.value = get(el.dataset.bind) || ""; });
+    $$("[data-bind]").forEach((el) => { const v = get(el.dataset.bind); el.value = v == null ? "" : v; });
   }
   document.addEventListener("input", (e) => {
     const el = e.target;
     if (!el.dataset || !el.dataset.bind) return;
-    set(el.dataset.bind, el.value);
-    if (el.dataset.bind === "date" && !el.value) set("date", today());
+    const path = el.dataset.bind;
+    set(path, el.type === "number" ? parseFloat(el.value) || 0 : el.value);
+    if (path === "date" && !el.value) set("date", today());
+    if (path === "env.model") {
+      if (PP.PHONES[el.value]) Object.assign(state.env, PP.PHONES[el.value]);
+      else state.env.name = "Custom phone";
+      fillFields();
+    } else if (/^env\.(h|w|t|diag|ratio|bezel)$/.test(path) && state.env.model !== "custom") {
+      state.env.model = "custom"; state.env.name = "Custom phone"; // sizes were edited by hand
+      $('[data-bind="env.model"]').value = "custom";
+    }
     changed();
     if (el.dataset.bind === "date" || el.dataset.bind === "weather.unit") refreshWeather();
   });
@@ -277,7 +296,7 @@
     fold: () => $("#fold").showModal(),
     print: () => {
       const old = document.title;
-      document.title = `${state.name.trim() || "My"} Paper Phone - ${state.date}`; // becomes the PDF file name
+      document.title = state.sheet === "envelope" ? `Envelope - ${state.env.name}` : `${state.name.trim() || "My"} Paper Phone - ${state.date}`; // becomes the PDF file name
       window.print();
       document.title = old;
     },
@@ -304,7 +323,8 @@
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
-    if (btn.dataset.act && ACTIONS[btn.dataset.act]) ACTIONS[btn.dataset.act]();
+    if (btn.dataset.sheet) { state.sheet = btn.dataset.sheet; changed(); }
+    else if (btn.dataset.act && ACTIONS[btn.dataset.act]) ACTIONS[btn.dataset.act]();
     else if (btn.classList.contains("dot")) {
       const id = btn.closest(".mod").dataset.mod;
       state.on[id] = !state.on[id];
@@ -319,6 +339,11 @@
 
   // ---- start ------------------------------------------------------------------------------------
   function start() {
+    $$("[data-panels]").forEach((sel) => {
+      sel.innerHTML = "";
+      [["contacts", "Contacts"], ["calendar", "Calendar"], ["tasks", "Tasks"], ["notes", "Notes"], ["weather", "Weather"], ["photo", "Photo"], ["paperapp", "Paper app"], ["", "Leave blank"]]
+        .forEach(([v, t]) => sel.add(new Option(t, v)));
+    });
     fillFields();
     Object.keys(LISTS).forEach(drawList);
     drawApps();

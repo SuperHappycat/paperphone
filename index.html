@@ -22,6 +22,30 @@
       <label>Paper <select data-bind="paper"><option value="A4">A4</option><option value="Letter">US Letter</option></select></label>
     </div>
 
+    <div class="sheetpick" role="group" aria-label="What to print">
+      <button type="button" data-sheet="booklet" aria-pressed="true">Folded booklet</button>
+      <button type="button" data-sheet="envelope" aria-pressed="false">Phone envelope</button>
+    </div>
+
+    <section class="envbox" data-when="envelope">
+      <p class="note lead">A paper sleeve for your phone. A keypad is printed over the screen and glows through the paper, so the phone only makes calls. The back carries your contacts or plans.</p>
+      <label>Phone <select data-bind="env.model"><option value="a08">Samsung Galaxy A08</option><option value="pixel3a">Google Pixel 3a</option><option value="custom">Another phone (enter sizes)</option></select></label>
+      <div class="sizes">
+        <label>Height, mm <input type="number" step="0.1" min="100" max="200" data-bind="env.h"></label>
+        <label>Width, mm <input type="number" step="0.1" min="50" max="100" data-bind="env.w"></label>
+        <label>Thickness, mm <input type="number" step="0.1" min="5" max="15" data-bind="env.t"></label>
+        <label>Screen, inches <input type="number" step="0.01" min="4" max="8" data-bind="env.diag"></label>
+        <label>Screen ratio <input data-bind="env.ratio" placeholder="20:9"></label>
+        <label>Screen starts, mm from top <input type="number" step="0.5" min="0" max="30" data-bind="env.bezel"></label>
+      </div>
+      <div class="sizes two">
+        <label>Back of envelope, upper <select data-bind="env.backTop" data-panels></select></label>
+        <label>Back of envelope, lower <select data-bind="env.backBottom" data-panels></select></label>
+      </div>
+      <p class="status" data-status="env" role="status"></p>
+      <p class="note">On the phone, open <a id="calllink" href="call.html">the keypad page</a> and press Start before sliding it into the envelope. If the printed circles sit above or below the glowing ones, change “Screen starts” by that many millimetres and print again.</p>
+    </section>
+
     <div class="mods">
       <section class="mod" data-mod="contacts">
         <button class="dot" type="button" aria-pressed="false" aria-label="Include contacts">C</button>
@@ -156,7 +180,8 @@
     <li>Fold in half once more, with your name on the front cover.</li>
   </ol>
   <p>If you added the card slot, cut along the four dotted lines before folding and tuck your card into the corners.</p>
-  <p>When printing, choose landscape, 100% scale (not “fit to page”), and no headers or footers.</p>
+  <p>For the phone envelope, the steps are printed on the sheet itself.</p>
+  <p>When printing, choose 100% scale (not “fit to page”) and no headers or footers. The booklet prints landscape, the envelope portrait.</p>
   <form method="dialog"><button class="primary">Close</button></form>
 </dialog>
 
@@ -167,7 +192,9 @@
 </dialog>
 
 <script src="js/tools.js"></script>
+<script src="js/keypad.js"></script>
 <script src="js/sheet.js"></script>
+<script src="js/envelope.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

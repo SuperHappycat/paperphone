@@ -1,6 +1,6 @@
 # Paper Phone, web edition
 
-A printable Paper Phone which helps you take a break away from your digital world. This fork turns the original Android experiment by [Special Projects](http://specialprojects.studio/project/paper-phone) into a plain HTML web app that runs in any browser, on a computer or a phone, with no install, account or API key.
+A printable Paper Phone which helps you take a break away from your digital world. This fork turns two Android experiments by [Special Projects](http://specialprojects.studio/), [Paper Phone](http://specialprojects.studio/project/paper-phone) and [Envelope](http://specialprojects.studio/project/envelope), into one plain HTML web app that runs in any browser, on a computer or a phone, with no install, account or API key.
 
 ![Paper Phone Image](190807PaperPhoneStills295-Edit.jpg)
 
@@ -28,6 +28,17 @@ New in the web edition:
 * A4 or US Letter paper.
 * A backup file you can save and restore, and a live preview of the sheet as you edit.
 
+## The phone envelope
+
+Switch from **Folded booklet** to **Phone envelope** to print a paper sleeve for your phone, after the [Envelope](https://github.com/specialprojects-experiments/envelope) experiment. The original template only fitted the Google Pixel 3a; this one is drawn to measure.
+
+* Sized for the Samsung Galaxy A08 by default (167.4 × 77.4 × 8 mm, 6.7 inch 20:9 screen), with a Pixel 3a preset and fields for any other phone.
+* A keypad is printed on the front, over the screen. The back carries any two Paper Phone panels, such as your contacts and today's calendar.
+* On the phone, open `call.html` and press Start. The keys glow through the paper, play dial tones, and the lower circle flashes the time digit by digit. The page shows how long you spent in the envelope today.
+* The printed keys and the glowing keys come from the same layout (`js/keypad.js`), measured as fractions of the screen, so they line up when the page is full screen. Where the screen starts below the top edge of the phone is an estimate for the A08; adjust "Screen starts" if the circles are off.
+
+Limits of a web page, compared with the Android app: it cannot place a call itself, so the call key hands the number to the phone's own dialler, which may need one more tap; and it cannot answer incoming calls.
+
 ## Privacy
 
 What you type is stored only in your browser (local storage). Nothing is sent anywhere except the place names you look up for weather and directions, which go to the services listed above. An imported address book is read in the page and is not stored.
@@ -36,7 +47,7 @@ The map tiles and lookups come from free community services; they are meant for 
 
 ## Files
 
-* `index.html`, `css/`, `js/` – the web app. `js/sheet.js` draws the sheet as SVG, `js/tools.js` holds the puzzles, importers and lookups, `js/app.js` runs the page.
+* `index.html`, `css/`, `js/` – the web app. `call.html` and `js/call.js` are the envelope keypad. `js/sheet.js` draws the booklet as SVG, `js/envelope.js` draws the envelope, `js/keypad.js` holds the key layout both share, `js/tools.js` holds the puzzles, importers and lookups, `js/app.js` runs the page.
 * `fonts/`, `paperapps/` – typefaces and paper app artwork from the original app.
 * `android/` – the original Android source, unchanged.
 

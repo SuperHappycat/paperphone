@@ -126,3 +126,18 @@ dialog li { margin-bottom: 8px; }
   .page:last-child { break-after: auto; page-break-after: auto; }
   .page svg { width: 100%; height: 100%; box-shadow: none; }
 }
+
+/* booklet / envelope switch and envelope settings */
+.sheetpick { display: grid; grid-template-columns: 1fr 1fr; margin: 18px 0 0; }
+.sheetpick button { justify-content: center; font: .95rem var(--display); letter-spacing: .03em; min-height: 42px; }
+.sheetpick button + button { border-left: 0; }
+.sheetpick button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.envbox { padding: 6px 0 16px; border-bottom: 1px solid var(--ink); }
+.envbox .lead { color: var(--ink); font-size: .88rem; }
+.sizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 10px; }
+.sizes.two { grid-template-columns: 1fr 1fr; }
+.envbox a { color: inherit; }
+.is-envelope .dot { visibility: hidden; }
+.is-envelope [data-mod="maps"], .is-envelope [data-mod="contactless"] { display: none; }
+.pages.portrait { max-width: 620px; }
+@media (max-width: 900px) { .sizes { grid-template-columns: 1fr 1fr; } }
