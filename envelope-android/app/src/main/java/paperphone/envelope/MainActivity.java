@@ -4,6 +4,13 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.role.RoleManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.provider.ContactsContract;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -26,9 +33,10 @@ import android.widget.TextView;
 /**
  * One screen with two faces: a setup list (done before the paper goes on) and the keypad.
  */
-public class MainActivity extends Activity implements KeypadView.Host, CallHub.Listener {
+public class MainActivity extends Activity implements KeypadView.Host, TentView.Host, CallHub.Listener, SensorEventListener {
     static final String EXTRA_KEYPAD = "keypad";
-    private static final int REQUEST_CALL = 1, REQUEST_ROLE = 2;
+    private static final int REQUEST_CALL = 1, REQUEST_ROLE = 2, REQUEST_CONTACT = 3;
+    private static final String PREF_CALLERS = "importantCallers", PREF_PEOPLE = "people", PREF_LAST = "lastMeal";
     private static final long DIM_AFTER_MS = 20_000;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -39,6 +47,17 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
     private TextView callStatus, roleStatus;
     private boolean keypadShown;
 
+    // table tent
+    private TentView tent;
+    private Button tentButton;
+    private TextView peopleText, callersText, lastMealText;
+    private boolean tentShown;
+    private int people = 4;
+    private final java.util.List<String> callerNames = new java.util.ArrayList<>();
+    private float[] rest;
+    private int movedCount;
+    private long tentStartedAt;
+
     @Override protected void onCreate(Bundle saved) {
         super.onCreate(saved);
         FrameLayout root = new FrameLayout(this);
@@ -46,6 +65,11 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
         keypad.setHost(this);
         keypad.setVisibility(View.GONE);
         root.addView(keypad, new FrameLayout.LayoutParams(-1, -1));
+        tent = new TentView(this);
+        tent.setHost(this);
+        tent.setVisibility(View.GONE);
+        root.addView(tent, new FrameLayout.LayoutParams(-1, -1));
+        loadTentSettings();
         setup = buildSetup();
         root.addView(setup, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
@@ -58,7 +82,7 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
     }
 
     private void handleIntent(Intent intent) {
-        if (intent != null && intent.getBooleanExtra(EXTRA_KEYPAD, false)) showKeypad();
+        if (intent != null && intent.getBooleanExtra(EXTRA_KEYPAD, false) && !tentShown) showKeypad();
     }
 
     // ---- setup list ----------------------------------------------------------------
@@ -116,6 +140,35 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
                 + "The screen dims after 20 seconds to save battery and wakes on any tap. "
                 + "To leave the keypad, tap the top left corner of the screen.", 14, 0xFFAAAAAA));
 
+        TextView tentTitle = text("Table tent", 30, 0xFFFFFFFF);
+        ((LinearLayout.LayoutParams) pad(tentTitle, 36)).topMargin = dp(36);
+        col.addView(tentTitle);
+        col.addView(text("For a meal: this phone lies on top of the pile under the paper tent and lights it. "
+                + "Only the callers you choose here will ring. Everyone else is silenced and counted, and stays in the call log.", 16, 0xFFCCCCCC));
+        col.addView(text("People at the table", 18, 0xFFFFFFFF));
+        LinearLayout row = new LinearLayout(this);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.addView(button("−", v -> setPeople(people - 1)));
+        peopleText = text("4", 22, 0xFFFFFFFF);
+        peopleText.setPadding(dp(18), 0, dp(18), 0);
+        row.addView(peopleText);
+        row.addView(button("+", v -> setPeople(people + 1)));
+        col.addView(row);
+        col.addView(text("Callers who may ring", 18, 0xFFFFFFFF));
+        callersText = text("", 14, 0xFFAAAAAA);
+        col.addView(callersText);
+        col.addView(button("Add a caller from contacts", v -> startActivityForResult(
+                new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI), REQUEST_CONTACT)));
+        col.addView(button("Clear the list", v -> { CallHub.important.clear(); callerNames.clear(); saveTentSettings(); refreshSetup(); }));
+        tentButton = button("Start the meal", v -> showTent());
+        ((LinearLayout.LayoutParams) tentButton.getLayoutParams()).topMargin = dp(28);
+        col.addView(tentButton);
+        lastMealText = text("", 14, 0xFFAAAAAA);
+        col.addView(lastMealText);
+        col.addView(text("Tap “who’s next” through the paper to pick someone. When the call circle pulses, one of your chosen callers "
+                + "is ringing: tap to answer on the loudspeaker, hold to refuse, tap twice to hang up. "
+                + "The meal ends when this phone is picked up.", 14, 0xFFAAAAAA));
+
         col.addView(text("When you take the phone out", 18, 0xFFFFFFFF));
         col.addView(text("Give calls back to your normal phone app, or every call will keep arriving on this keypad.", 14, 0xFFAAAAAA));
         col.addView(button("Choose the phone app", v -> startActivity(new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))));
@@ -125,6 +178,47 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
         scroll.setFillViewport(true);
         scroll.addView(col);
         return scroll;
+    }
+
+    private static android.view.ViewGroup.LayoutParams pad(View v, int unused) {
+        if (v.getLayoutParams() == null) v.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+        return v.getLayoutParams();
+    }
+
+    private void setPeople(int n) {
+        people = Math.max(2, Math.min(8, n));
+        saveTentSettings();
+        refreshSetup();
+    }
+
+    private void loadTentSettings() {
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        people = prefs.getInt(PREF_PEOPLE, 4);
+        CallHub.important.clear();
+        callerNames.clear();
+        for (String line : prefs.getString(PREF_CALLERS, "").split("\n")) {
+            String[] parts = line.split("\t");
+            if (parts.length == 2 && !parts[1].isEmpty()) { callerNames.add(parts[0]); CallHub.important.add(parts[1]); }
+        }
+    }
+
+    private void saveTentSettings() {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < callerNames.size(); i++) b.append(callerNames.get(i)).append('\t').append(CallHub.important.get(i)).append('\n');
+        getPreferences(MODE_PRIVATE).edit().putInt(PREF_PEOPLE, people).putString(PREF_CALLERS, b.toString()).apply();
+    }
+
+    /** Reads the one contact the person just picked. The picker grants access to that entry only. */
+    private void addCaller(Uri picked) {
+        String[] columns = {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER};
+        try (Cursor c = getContentResolver().query(picked, columns, null, null, null)) {
+            if (c == null || !c.moveToFirst()) return;
+            String name = c.getString(0), number = c.getString(1);
+            if (number == null || number.isEmpty() || CallHub.important.contains(number)) return;
+            callerNames.add(name == null ? number : name.replace('\t', ' ').replace('\n', ' '));
+            CallHub.important.add(number);
+            saveTentSettings();
+        } catch (RuntimeException e) { /* nothing added */ }
     }
 
     private boolean canCall() { return checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED; }
@@ -151,6 +245,14 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
                 : "Without this, the phone's own call screen covers the keypad during every call.");
         roleButton.setVisibility(role ? View.GONE : View.VISIBLE);
         startButton.setEnabled(call);
+
+        peopleText.setText(String.valueOf(people));
+        StringBuilder names = new StringBuilder();
+        for (int i = 0; i < callerNames.size(); i++) names.append(callerNames.get(i)).append("  ").append(CallHub.important.get(i)).append('\n');
+        callersText.setText(callerNames.isEmpty() ? "Nobody yet. With an empty list, every call is silenced during the meal." : names.toString().trim());
+        tentButton.setEnabled(role);
+        String last = getPreferences(MODE_PRIVATE).getString(PREF_LAST, "");
+        lastMealText.setText(!role ? "The tent can only hold back calls while Envelope is the phone app (step 2 above)." : last);
     }
 
     @Override public void onRequestPermissionsResult(int code, String[] permissions, int[] results) {
@@ -160,14 +262,71 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
 
     @Override protected void onActivityResult(int code, int result, Intent data) {
         super.onActivityResult(code, result, data);
+        if (code == REQUEST_CONTACT && result == RESULT_OK && data != null && data.getData() != null) addCaller(data.getData());
         refreshSetup();
     }
+
+    // ---- table tent ------------------------------------------------------------------
+
+    private void showTent() {
+        tentShown = true;
+        CallHub.tentMode = true;
+        CallHub.waited = 0;
+        setup.setVisibility(View.GONE);
+        keypad.setVisibility(View.GONE);
+        tent.setVisibility(View.VISIBLE);
+        setShowWhenLocked(true);
+        setTurnScreenOn(true);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        hideBars();
+        setBrightness(1f);
+        tent.start(people);
+        rest = null;
+        movedCount = 0;
+        tentStartedAt = android.os.SystemClock.elapsedRealtime();
+        SensorManager sensors = getSystemService(SensorManager.class);
+        Sensor accel = sensors == null ? null : sensors.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (accel != null) sensors.registerListener(this, accel, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override public void endMeal() {
+        if (!tentShown) return;
+        tentShown = false;
+        CallHub.tentMode = false;
+        SensorManager sensors = getSystemService(SensorManager.class);
+        if (sensors != null) sensors.unregisterListener(this);
+        tent.stop();
+        long minutes = tent.minutes();
+        String summary = "Last meal: " + minutes + (minutes == 1 ? " minute" : " minutes") + " before the phone was picked up. "
+                + (CallHub.waited == 0 ? "No calls waited." : CallHub.waited == 1 ? "1 call waited; it is in the call log." : CallHub.waited + " calls waited; they are in the call log.");
+        getPreferences(MODE_PRIVATE).edit().putString(PREF_LAST, summary).apply();
+        tent.setVisibility(View.GONE);
+        if (CallHub.state != CallHub.IDLE) { showKeypad(); return; } // a call is on: carry on with the keypad
+        setBrightness(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE);
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setShowWhenLocked(false);
+        showBars();
+        setup.setVisibility(View.VISIBLE);
+        refreshSetup();
+    }
+
+    /** Lying still, gravity reads the same every time. A lift or a tilt changes it. */
+    @Override public void onSensorChanged(SensorEvent e) {
+        if (!tentShown || android.os.SystemClock.elapsedRealtime() - tentStartedAt < 8000) return; // time to lower the tent
+        if (rest == null) { rest = e.values.clone(); return; }
+        float dx = e.values[0] - rest[0], dy = e.values[1] - rest[1], dz = e.values[2] - rest[2];
+        movedCount = Math.sqrt(dx * dx + dy * dy + dz * dz) > 2.5 ? movedCount + 1 : 0;
+        if (movedCount >= 4) endMeal();
+    }
+
+    @Override public void onAccuracyChanged(Sensor sensor, int accuracy) { }
 
     // ---- keypad ----------------------------------------------------------------------
 
     private void showKeypad() {
         keypadShown = true;
         setup.setVisibility(View.GONE);
+        tent.setVisibility(View.GONE);
         keypad.setVisibility(View.VISIBLE);
         // stay usable over the lock screen: the phone itself can remain locked in the envelope
         setShowWhenLocked(true);
@@ -239,6 +398,7 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
     }
 
     @Override public void onCallChanged() {
+        if (tentShown) { tent.invalidate(); return; }
         if (CallHub.state != CallHub.IDLE && !keypadShown) showKeypad();
         wake();
         keypad.invalidate();
@@ -249,6 +409,7 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
         CallHub.listener = this;
         refreshSetup();
         if (keypadShown) { hideBars(); wake(); }
+        if (tentShown) { hideBars(); setBrightness(1f); }
         if (CallHub.state != CallHub.IDLE) onCallChanged();
     }
 
@@ -259,17 +420,19 @@ public class MainActivity extends Activity implements KeypadView.Host, CallHub.L
 
     @Override protected void onDestroy() {
         super.onDestroy();
+        if (tentShown) { CallHub.tentMode = false; SensorManager sm = getSystemService(SensorManager.class); if (sm != null) sm.unregisterListener(this); }
         if (CallHub.listener == this) CallHub.listener = null;
     }
 
     @Override public void onWindowFocusChanged(boolean focus) {
         super.onWindowFocusChanged(focus);
-        if (focus && keypadShown) hideBars();
+        if (focus && (keypadShown || tentShown)) hideBars();
     }
 
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() {
-        if (keypadShown && CallHub.state == CallHub.IDLE) leaveKeypad();
-        else if (!keypadShown) super.onBackPressed();
+        if (tentShown) { if (CallHub.state == CallHub.IDLE) endMeal(); }
+        else if (keypadShown) { if (CallHub.state == CallHub.IDLE) leaveKeypad(); }
+        else super.onBackPressed();
     }
 }

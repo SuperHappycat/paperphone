@@ -42,7 +42,7 @@ Limits of the web keypad: a web page cannot place a call itself, so the call key
 
 ### The Android keypad app
 
-`envelope-android/` is a small Android app that removes those limits, in the way the original Envelope app did. Once you make it the phone app, calls are dialled, answered and ended on the envelope keypad and the system call screen never appears.
+`envelope-android/` is a small Android app (it also has the table tent mode) that removes those limits, in the way the original Envelope app did. Once you make it the phone app, calls are dialled, answered and ended on the envelope keypad and the system call screen never appears.
 
 * Both things it needs (permission to call, and being the phone app) are asked for on its first screen, before the paper goes on.
 * The key positions are the same fractions of the screen as `js/keypad.js`, so it matches the printed envelope on any phone.
@@ -52,6 +52,16 @@ Limits of the web keypad: a web page cannot place a call itself, so the call key
 
 Build it with `gradle assembleDebug` inside `envelope-android/` (Android SDK 35, Java 17 or newer). It needs Android 10 or later.
 
+## The table tent
+
+A third sheet, new to this fork, in the same spirit as the two experiments: a folded paper tent that covers everyone's phones for one meal.
+
+* One sheet, four short cuts, six folds, no glue. The long sides carry a question for the table (facing one side) and a game that needs no screen (facing the other); a switch keeps both suitable for children.
+* The last phone lies on top of the pile, screen up, and the tent rests on it. A code printed on the tent opens `tent.html` on that phone, which lights the printed circles through the paper: tap “who's next” and a light runs along the names and stops on one; a row of dots lights one every five minutes; and when a phone is picked up it chimes and the meal is over.
+* The length of the meal is kept on the phone, and the next tent designed on that phone prints it.
+* Important calls: the tent page asks everyone to switch on Do Not Disturb with starred contacts allowed, so those callers still ring. The Android app goes further on the top phone: you choose the callers who may ring, the tent's “call” circle pulses for them and a tap answers on the loudspeaker, and everyone else is silenced and counted.
+* `tent.html?fast=1` runs the five-minute dots every three seconds, for trying it out.
+
 ## Privacy
 
 What you type is stored only in your browser (local storage). Nothing is sent anywhere except the place names you look up for weather and directions, which go to the services listed above. An imported address book is read in the page and is not stored.
@@ -60,7 +70,7 @@ The map tiles and lookups come from free community services; they are meant for 
 
 ## Files
 
-* `index.html`, `css/`, `js/` – the web app. `call.html` and `js/call.js` are the envelope keypad. `js/sheet.js` draws the booklet as SVG, `js/envelope.js` draws the envelope, `js/keypad.js` holds the key layout both share, `js/tools.js` holds the puzzles, importers and lookups, `js/app.js` runs the page.
+* `index.html`, `css/`, `js/` – the web app. `call.html` and `js/call.js` are the envelope keypad; `tent.html` and `js/tentpage.js` are the phone under the table tent; `js/tent.js` draws the tent. `js/vendor/qrcode.js` is Kazuhiko Arase's QR Code Generator (MIT). `js/sheet.js` draws the booklet as SVG, `js/envelope.js` draws the envelope, `js/keypad.js` holds the key layout both share, `js/tools.js` holds the puzzles, importers and lookups, `js/app.js` runs the page.
 * `fonts/`, `paperapps/` – typefaces and paper app artwork from the original app.
 * `envelope-android/` – the Android keypad app for the envelope.
 * `android/` – the original Paper Phone Android source, unchanged.
