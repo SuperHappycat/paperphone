@@ -25,7 +25,22 @@
     <div class="sheetpick" role="group" aria-label="What to print">
       <button type="button" data-sheet="booklet" aria-pressed="true">Folded booklet</button>
       <button type="button" data-sheet="envelope" aria-pressed="false">Phone envelope</button>
+      <button type="button" data-sheet="tent" aria-pressed="false">Table tent</button>
     </div>
+
+    <section class="envbox" data-when="tent">
+      <p class="note lead">A paper tent that covers everyone's phones for one meal. The last phone lies on top of the pile and lights the printed circles through the paper: it picks who answers, shows how long you have been at the table, and notices when a phone is picked up.</p>
+      <label>Meal <input data-bind="tent.meal" maxlength="24" placeholder="Dinner"></label>
+      <label>Who is at the table (2 to 8 names, one per line)
+        <textarea data-bind="tent.names" rows="4" placeholder="Ann&#10;Ben&#10;Cleo&#10;Dan"></textarea></label>
+      <label class="check"><input type="checkbox" data-check="tent.kids"> Children at the table</label>
+      <label>Question for the table <textarea data-bind="tent.question" rows="2"></textarea></label>
+      <div class="row"><button type="button" data-act="tent-question">Another question</button></div>
+      <label>Game <select data-bind="tent.game" data-games></select></label>
+      <label>Phone on top <select data-bind="env.model"><option value="a08">Samsung Galaxy A08</option><option value="pixel3a">Google Pixel 3a</option><option value="custom">Another phone (sizes under Phone envelope)</option></select></label>
+      <p class="status" data-status="tent" role="status"></p>
+      <p class="note">The code printed on the tent opens <a href="tent.html">the tent page</a> on the phone. So that important calls still get through, that page asks everyone to switch on Do Not Disturb with starred contacts allowed before the phones go under.</p>
+    </section>
 
     <section class="envbox" data-when="envelope">
       <p class="note lead">A paper sleeve for your phone. A keypad is printed over the screen and glows through the paper, so the phone only makes calls. The back carries your contacts or plans.</p>
@@ -181,8 +196,8 @@
     <li>Fold in half once more, with your name on the front cover.</li>
   </ol>
   <p>If you added the card slot, cut along the four dotted lines before folding and tuck your card into the corners.</p>
-  <p>For the phone envelope, the steps are printed on the sheet itself.</p>
-  <p>When printing, choose 100% scale (not “fit to page”) and no headers or footers. The booklet prints landscape, the envelope portrait.</p>
+  <p>For the phone envelope and the table tent, the steps are printed on the sheet itself.</p>
+  <p>When printing, choose 100% scale (not “fit to page”) and no headers or footers. The booklet and the tent print landscape, the envelope portrait.</p>
   <form method="dialog"><button class="primary">Close</button></form>
 </dialog>
 
@@ -196,6 +211,8 @@
 <script src="js/keypad.js"></script>
 <script src="js/sheet.js"></script>
 <script src="js/envelope.js"></script>
+<script src="js/vendor/qrcode.js"></script>
+<script src="js/tent.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

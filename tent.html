@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%277%27 y=%272%27 width=%2718%27 height=%2728%27 fill=%27%23fff%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3Cpath d=%27M11 9h10M11 14h10M11 19h6%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Table tent – Paper Phone</title>
+<style>
+@font-face { font-family: Varela; src: url(fonts/varela_regular.otf) format("opentype"); }
+@font-face { font-family: "Work Sans"; src: url(fonts/worksans_regular.ttf) format("truetype"); }
+html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: hidden; font: 16px/1.5 "Work Sans", sans-serif;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+#lights { position: fixed; inset: 0; }
+.light { position: absolute; border-radius: 50%; background: #fff; opacity: .22; transform: translate(-50%, -50%); transition: opacity .12s linear; }
+.light.dot { opacity: .1; }
+.light.on { opacity: 1; }
+.light.dot.on { opacity: .95; }
+#cover { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; padding: 8vw; gap: 14px; overflow: auto; }
+#cover.done { background: #fff; color: #000; }
+#cover h1 { font: 400 1.7rem/1.15 Varela, sans-serif; letter-spacing: .06em; margin: 0; }
+#cover p { margin: 0; max-width: 34em; }
+#cover button { font: 1rem Varela, sans-serif; letter-spacing: .04em; padding: 14px 20px; border: 1.5px solid currentColor; background: #f3c53a; color: #000; align-self: flex-start; }
+#cover button.quiet { background: none; color: inherit; padding: 8px 16px; }
+#count { display: flex; align-items: center; gap: 14px; font: 1.4rem Varela, sans-serif; }
+#checklist { margin: 0; padding: 0; list-style: none; }
+#checklist li { padding: 6px 0 6px 1.7em; position: relative; border-top: 1px solid #333; }
+#checklist li::before { content: "✓"; position: absolute; left: 0; color: #8fd694; }
+#checklist li.bad::before { content: "!"; color: #ffb4a8; font-weight: 700; }
+#checklist li.todo::before { content: "•"; color: #f3c53a; }
+#cover a { color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid #6aa9ff; outline-offset: 3px; }
+</style>
+</head>
+<body>
+<div id="lights" aria-hidden="true"></div>
+<div id="cover">
+  <h1 id="heading">Table tent</h1>
+  <div id="intro">
+    <p>This phone goes on top of the pile, screen up, under the paper tent. It lights the printed circles.</p>
+    <p>People at the table</p>
+    <div id="count"><button type="button" class="quiet" id="fewer" aria-label="One fewer">−</button><span id="people">4</span><button type="button" class="quiet" id="more" aria-label="One more">+</button></div>
+  </div>
+  <div id="checks" hidden>
+    <p>Before the tent goes on:</p>
+    <ul id="checklist"></ul>
+  </div>
+  <p id="result" hidden></p>
+  <button id="start" type="button">Start</button>
+  <p><a href="index.html">Back to Paper Phone</a> to print a tent.</p>
+</div>
+<script src="js/keypad.js"></script>
+<script src="js/tentpage.js"></script>
+</body>
+</html>

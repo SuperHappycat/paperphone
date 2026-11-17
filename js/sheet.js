@@ -302,10 +302,11 @@
   }
 
   // shared with js/envelope.js
-  PP.draw = { panels, text, esc, fit, DISPLAY, BODY, W, H };
+  PP.draw = { panels, text, esc, fit, wrap, width, DISPLAY, BODY, W, H };
 
   PP.renderPages = function (s) {
     if (s.sheet === "envelope") return [PP.renderEnvelope(s)];
+    if (s.sheet === "tent") return [PP.renderTent(s)];
     const pages = [frontPage(s)];
     if (s.on.maps) pages.push(backPage(s));
     return pages;

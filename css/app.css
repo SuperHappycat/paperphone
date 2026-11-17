@@ -141,3 +141,10 @@ dialog li { margin-bottom: 8px; }
 .is-envelope [data-mod="maps"], .is-envelope [data-mod="contactless"] { display: none; }
 .pages.portrait { max-width: 620px; }
 @media (max-width: 900px) { .sizes { grid-template-columns: 1fr 1fr; } }
+
+/* table tent */
+.sheetpick { grid-template-columns: 1fr 1fr 1fr; }
+.sheetpick button { font-size: .85rem; padding: 7px 4px; }
+.is-tent .mods { display: none; }
+label.check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: .9rem; }
+label.check input { min-height: 0; width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }

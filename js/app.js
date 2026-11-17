@@ -17,6 +17,7 @@
   function defaults() {
     return {
       name: "", date: today(), paper: "A4", sheet: "booklet",
+      tent: { meal: "Dinner", names: "", kids: false, question: "", game: "", last: null },
       env: Object.assign({ model: "a08", backTop: "contacts", backBottom: "calendar" }, PP.PHONES.a08),
       on: { contacts: true, calendar: true, tasks: true, photo: false, notes: true, weather: false, paperapp: true, maps: false, contactless: false },
       contacts: [], events: [], tasks: [], photo: "", notesText: "",
@@ -62,10 +63,15 @@
   // ---- preview ---------------------------------------------------------------
   function render() {
     $("#pages").innerHTML = PP.renderPages(state).map((p, i) => `<figure class="page"><figcaption>${i ? "Back" : "Front"}</figcaption>${p}</figure>`).join("");
-    const env = state.sheet === "envelope";
-    $("#pages").classList.toggle("two", state.on.maps && !env);
+    const env = state.sheet === "envelope", tent = state.sheet === "tent";
+    $("#pages").classList.toggle("two", state.on.maps && !env && !tent);
     $("#pages").classList.toggle("portrait", env);
     $(".controls").classList.toggle("is-envelope", env);
+    $(".controls").classList.toggle("is-tent", tent);
+    if (tent) {
+      const g = PP.tentFit(state), n = g.people;
+      say("tent", !g.fits ? `This phone is too large for a tent on one ${state.paper} sheet.` : n < 2 ? "Add at least two names." : `${n} people. Sized for the ${state.env.name}.`, !g.fits || n < 2);
+    }
     $$("[data-sheet]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sheet === state.sheet)));
     $$("[data-when]").forEach((el) => { el.hidden = el.dataset.when !== state.sheet; });
     $("#pagesize").textContent = `@page { size: ${state.paper === "Letter" ? "letter" : "A4"} ${env ? "portrait" : "landscape"}; margin: 0; }`;
@@ -103,9 +109,15 @@
   // ---- simple bound fields -----------------------------------------------------
   function fillFields() {
     $$("[data-bind]").forEach((el) => { const v = get(el.dataset.bind); el.value = v == null ? "" : v; });
+    $$("[data-check]").forEach((el) => { el.checked = !!get(el.dataset.check); });
   }
   document.addEventListener("input", (e) => {
     const el = e.target;
+    if (el.dataset && el.dataset.check) {
+      set(el.dataset.check, el.checked);
+      if (el.dataset.check === "tent.kids") tentDefaults(true);
+      return changed();
+    }
     if (!el.dataset || !el.dataset.bind) return;
     const path = el.dataset.bind;
     set(path, el.type === "number" ? parseFloat(el.value) || 0 : el.value);
@@ -121,6 +133,23 @@
     changed();
     if (el.dataset.bind === "date" || el.dataset.bind === "weather.unit") refreshWeather();
   });
+
+  // ---- table tent ---------------------------------------------------------------
+  /** Fills in a question and a game, and swaps out ones that do not suit children. */
+  function tentDefaults(recheck) {
+    const t = state.tent, kids = t.kids;
+    const games = PP.TENT_GAMES.filter((g) => !kids || g.kid);
+    const sel = $("[data-games]");
+    sel.innerHTML = "";
+    games.forEach((g) => sel.add(new Option(g.name, g.name)));
+    if (!games.some((g) => g.name === t.game)) t.game = PP.tentPick("game", kids);
+    sel.value = t.game;
+    const known = PP.TENT_QUESTIONS.find((q) => q.t === t.question);
+    if (!t.question || (recheck && kids && known && !known.kid)) {
+      t.question = PP.tentPick("question", kids);
+      $('[data-bind="tent.question"]').value = t.question;
+    }
+  }
 
   // ---- list editors --------------------------------------------------------------
   const LISTS = {
@@ -289,6 +318,11 @@
     "add-event": () => addTo("events"),
     "add-task": () => addTo("tasks"),
     "clear-photo": () => { state.photo = ""; changed(); },
+    "tent-question": () => {
+      state.tent.question = PP.tentPick("question", state.tent.kids, state.tent.question);
+      $('[data-bind="tent.question"]').value = state.tent.question;
+      changed();
+    },
     "new-puzzle": () => { state.paperapp.seed = 1 + Math.floor(Math.random() * 1e9); changed(); },
     "weather-find": weatherFind,
     "weather-here": weatherHere,
@@ -296,7 +330,7 @@
     fold: () => $("#fold").showModal(),
     print: () => {
       const old = document.title;
-      document.title = state.sheet === "envelope" ? `Envelope - ${state.env.name}` : `${state.name.trim() || "My"} Paper Phone - ${state.date}`; // becomes the PDF file name
+      document.title = state.sheet === "tent" ? `Table tent - ${state.tent.meal || "Dinner"} ${state.date}` : state.sheet === "envelope" ? `Envelope - ${state.env.name}` : `${state.name.trim() || "My"} Paper Phone - ${state.date}`; // becomes the PDF file name
       window.print();
       document.title = old;
     },
@@ -344,6 +378,9 @@
       [["contacts", "Contacts"], ["calendar", "Calendar"], ["tasks", "Tasks"], ["notes", "Notes"], ["weather", "Weather"], ["photo", "Photo"], ["paperapp", "Paper app"], ["", "Leave blank"]]
         .forEach(([v, t]) => sel.add(new Option(t, v)));
     });
+    // the tent page on this same phone leaves the length of the last meal here
+    try { const last = JSON.parse(localStorage.getItem("paperphone.tent.last") || "null"); if (last && last.minutes) state.tent.last = last; } catch (e) { /* none */ }
+    tentDefaults(false);
     fillFields();
     Object.keys(LISTS).forEach(drawList);
     drawApps();

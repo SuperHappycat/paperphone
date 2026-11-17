@@ -16,6 +16,20 @@
     return keys;
   };
 
+  /**
+   * Where the table tent's lights sit on the phone screen. `long` and `short` are the
+   * screen's two sides in any unit; x runs along the long side, y across the short one.
+   * Shared by the printed tent (millimetres) and tent.html (pixels).
+   */
+  PP.tentLayout = function (people, long, short) {
+    const n = Math.max(2, Math.min(8, people | 0)), pitch = long / n, items = [];
+    for (let i = 0; i < n; i++) items.push({ id: "p" + i, x: (i + 0.5) * pitch, y: 0.3 * short, r: Math.min(0.1 * short, 0.4 * pitch) });
+    items.push({ id: "next", x: 0.13 * long, y: 0.76 * short, r: 0.13 * short });
+    for (let i = 0; i < 12; i++) items.push({ id: "t" + i, x: (0.3 + (0.4 * i) / 11) * long, y: 0.76 * short, r: 0.03 * short });
+    items.push({ id: "call", x: 0.87 * long, y: 0.76 * short, r: 0.13 * short });
+    return items;
+  };
+
   PP.PHONES = {
     a08: { name: "Samsung Galaxy A08", h: 167.4, w: 77.4, t: 8, diag: 6.7, ratio: "20:9", bezel: 3.5 },
     pixel3a: { name: "Google Pixel 3a", h: 151.3, w: 70.1, t: 8.2, diag: 5.6, ratio: "18.5:9", bezel: 10 },
