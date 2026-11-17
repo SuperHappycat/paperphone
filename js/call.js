@@ -108,20 +108,49 @@
   }
 
   // ---- start, pause, exit ------------------------------------------------------------
-  async function start() {
-    try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") await audio.resume(); } catch (e) { audio = null; }
+  // Everything that needs a tap to be allowed is asked for here, on a button press,
+  // so it happens while the phone is still out of the envelope.
+  async function acquire() {
+    const got = { sound: true, full: true, awake: true };
+    try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") await audio.resume(); } catch (e) { audio = null; got.sound = false; }
     const root = document.documentElement;
-    try { await (root.requestFullscreen ? root.requestFullscreen({ navigationUI: "hide" }) : root.webkitRequestFullscreen && root.webkitRequestFullscreen()); } catch (e) { /* layout still works, slightly offset */ }
-    try { if (navigator.wakeLock) wake = await navigator.wakeLock.request("screen"); } catch (e) { wake = null; }
+    if (!document.fullscreenElement) {
+      try { await (root.requestFullscreen ? root.requestFullscreen({ navigationUI: "hide" }) : root.webkitRequestFullscreen()); } catch (e) { got.full = false; }
+    }
+    if (!wake || wake.released) {
+      try { wake = navigator.wakeLock ? await navigator.wakeLock.request("screen") : null; } catch (e) { wake = null; }
+      got.awake = !!wake;
+    }
+    return got;
+  }
+  function begin() {
     running = true; startedAt = Date.now();
+    cover.classList.remove("checking");
+    document.getElementById("checks").hidden = true;
     cover.hidden = true;
     layout();
+  }
+  async function start() {
+    const resuming = cover.classList.contains("resume");
+    const got = await acquire();
+    if (resuming) return begin();
+    const rows = [
+      [got.full, "Full screen is on, so the keys line up with the paper.", "Full screen was refused. The keys will sit a little too low. Try Start again, or add this page to the home screen."],
+      [got.awake, "The screen will stay on while the keypad is showing.", "The phone will not keep the screen on. Turn off battery saver, or set the screen timeout to its longest."],
+      [got.sound, "Dial tones are ready.", "Sound is blocked, so the keys will be silent."],
+    ];
+    document.getElementById("checklist").innerHTML = rows.map((r) => `<li class="${r[0] ? "" : "bad"}">${r[0] ? r[1] : r[2]}</li>`).join("");
+    document.getElementById("heading").textContent = "Before the paper goes on";
+    cover.classList.add("checking");
+    document.getElementById("checks").hidden = false;
   }
   function pause(resume) {
     if (!running) return;
     running = false; bank();
     if (wake) { wake.release().catch(() => {}); wake = null; }
     cover.classList.toggle("resume", !!resume);
+    cover.classList.remove("checking");
+    document.getElementById("checks").hidden = true;
     document.getElementById("heading").textContent = resume ? "Tap to continue" : "Envelope keypad";
     document.getElementById("start").textContent = resume ? "Continue" : "Start";
     stat.textContent = usageLine();
@@ -142,6 +171,9 @@
   pad.append(exit);
 
   document.getElementById("start").addEventListener("click", start);
+  document.getElementById("go").addEventListener("click", async () => { await acquire(); begin(); });
+  // opens the dialler with a harmless number filled in; nothing is called
+  document.getElementById("testcall").addEventListener("click", () => { window.location.href = "tel:123"; });
   // in the envelope the whole white screen is the Continue button
   cover.addEventListener("click", (e) => { if (cover.classList.contains("resume") && e.target.id !== "start") start(); });
   document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) pause(true); });

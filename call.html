@@ -24,6 +24,13 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
 #cover p { margin: 0; max-width: 34em; }
 #cover button, #cover a.btn { font: 1rem Varela, sans-serif; letter-spacing: .04em; padding: 14px 20px; border: 1.5px solid currentColor; background: #f3c53a; color: #000; align-self: flex-start; text-decoration: none; }
 #cover a { color: inherit; }
+#checks { display: flex; flex-direction: column; gap: 14px; }
+#checklist { margin: 0; padding: 0; list-style: none; }
+#checklist li { padding: 6px 0 6px 1.7em; position: relative; border-top: 1px solid #333; }
+#checklist li::before { content: "✓"; position: absolute; left: 0; color: #8fd694; }
+#checklist li.bad::before { content: "!"; color: #ffb4a8; font-weight: 700; }
+#cover button.quiet { background: none; color: #fff; }
+#cover.resume #checks, #cover.checking .long, #cover.checking #start { display: none; }
 #stat { color: #bbb; min-height: 1.5em; }
 #cover.resume #stat { color: #333; }
 [hidden] { display: none !important; }
@@ -39,6 +46,13 @@ html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: h
   <p class="long">Tap digits to dial, then the large circle to call. Hold the large circle to clear the number. The lower circle flashes the time on the keypad, digit by digit.</p>
   <p class="long">Calling hands the number to your phone’s own dialler, which may ask for one more tap on its call button. A web page is not allowed to place the call itself.</p>
   <button id="start" type="button">Start</button>
+  <div id="checks" hidden>
+    <p>Do this before the paper goes on. Nothing should ask you anything once the phone is in the envelope.</p>
+    <ul id="checklist"></ul>
+    <p>The first call can make the phone ask which app should dial. Try it now and choose “Always”, then come back to this page.</p>
+    <button id="testcall" type="button" class="quiet">Try the call hand-off</button>
+    <button id="go" type="button">Show the keypad</button>
+  </div>
   <p id="stat" role="status"></p>
   <p class="long"><a href="index.html">Back to Paper Phone</a> to print the envelope.</p>
 </div>
