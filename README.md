@@ -38,7 +38,19 @@ Switch from **Folded booklet** to **Phone envelope** to print a paper sleeve for
 * `demo.html` lets you try it on a computer: a Galaxy A08 drawn to scale inside its envelope, with clickable keys that glow through the paper. No call is made.
 * The printed keys and the glowing keys come from the same layout (`js/keypad.js`), measured as fractions of the screen, so they line up when the page is full screen. Where the screen starts below the top edge of the phone is an estimate for the A08; adjust "Screen starts" if the circles are off.
 
-Limits of a web page, compared with the Android app: it cannot place a call itself, so the call key hands the number to the phone's own dialler, which may need one more tap; and it cannot answer incoming calls.
+Limits of the web keypad: a web page cannot place a call itself, so the call key hands the number to the phone's own dialler, which then shows its own keypad; and it cannot answer incoming calls.
+
+### The Android keypad app
+
+`envelope-android/` is a small Android app that removes those limits, in the way the original Envelope app did. Once you make it the phone app, calls are dialled, answered and ended on the envelope keypad and the system call screen never appears.
+
+* Both things it needs (permission to call, and being the phone app) are asked for on its first screen, before the paper goes on.
+* The key positions are the same fractions of the screen as `js/keypad.js`, so it matches the printed envelope on any phone.
+* Tap the large circle to call or answer, hold it to clear the number or refuse a caller, tap it twice to hang up. During a call the digits are sent down the line.
+* It stays usable over the lock screen, so the phone can stay locked, and dims the screen after 20 seconds without a tap to save battery.
+* When you take the phone out, give calls back to your usual phone app (the first screen has a button for this).
+
+Build it with `gradle assembleDebug` inside `envelope-android/` (Android SDK 35, Java 17 or newer). It needs Android 10 or later.
 
 ## Privacy
 
@@ -50,7 +62,8 @@ The map tiles and lookups come from free community services; they are meant for 
 
 * `index.html`, `css/`, `js/` – the web app. `call.html` and `js/call.js` are the envelope keypad. `js/sheet.js` draws the booklet as SVG, `js/envelope.js` draws the envelope, `js/keypad.js` holds the key layout both share, `js/tools.js` holds the puzzles, importers and lookups, `js/app.js` runs the page.
 * `fonts/`, `paperapps/` – typefaces and paper app artwork from the original app.
-* `android/` – the original Android source, unchanged.
+* `envelope-android/` – the Android keypad app for the envelope.
+* `android/` – the original Paper Phone Android source, unchanged.
 
 ## About the original
 
