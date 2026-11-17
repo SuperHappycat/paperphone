@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Phone</title>
+<meta name="description" content="Print a one-page paper booklet with the contacts, plans and notes you need today, then leave your phone behind.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%277%27 y=%272%27 width=%2718%27 height=%2728%27 fill=%27%23fff%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3Cpath d=%27M11 9h10M11 14h10M11 19h6%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<main class="app">
+  <div class="controls">
+    <header class="intro">
+      <h1>Paper Phone</h1>
+      <p>Pick what you need for the day, print one sheet, fold it three times, and leave your phone at home.</p>
+    </header>
+
+    <div class="basics">
+      <label>Your first name <input data-bind="name" autocomplete="given-name" maxlength="24" placeholder="Sam"></label>
+      <label>For which day <input type="date" data-bind="date"></label>
+      <label>Paper <select data-bind="paper"><option value="A4">A4</option><option value="Letter">US Letter</option></select></label>
+    </div>
+
+    <div class="mods">
+      <section class="mod" data-mod="contacts">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include contacts">C</button>
+        <details open><summary>Contacts <span class="hint"></span></summary>
+          <div class="list" data-list="contacts"></div>
+          <div class="row">
+            <button type="button" data-act="add-contact">Add a contact</button>
+            <button type="button" data-act="pick-contact" hidden>Choose from this phone</button>
+            <label class="filebtn">Import a .vcf file <input type="file" accept=".vcf,text/vcard,text/x-vcard" data-file="vcf"></label>
+          </div>
+          <div class="imported" hidden>
+            <input type="search" placeholder="Search imported contacts" aria-label="Search imported contacts">
+            <ul></ul>
+          </div>
+          <p class="note">Up to 7 people. An imported address book is only read in this browser tab and is not saved.</p>
+        </details>
+      </section>
+
+      <section class="mod" data-mod="calendar">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include calendar">C</button>
+        <details><summary>Calendar <span class="hint"></span></summary>
+          <div class="list" data-list="events"></div>
+          <div class="row">
+            <button type="button" data-act="add-event">Add an event</button>
+            <label class="filebtn">Import an .ics file <input type="file" accept=".ics,text/calendar" data-file="ics"></label>
+          </div>
+          <p class="note">The first 6 events are printed. Importing adds the events that fall on the day chosen above; export an .ics file from Google Calendar, Outlook or Apple Calendar.</p>
+        </details>
+      </section>
+
+      <section class="mod" data-mod="tasks">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include tasks">T</button>
+        <details><summary>Tasks <span class="hint"></span></summary>
+          <div class="list" data-list="tasks"></div>
+          <div class="row"><button type="button" data-act="add-task">Add a task</button></div>
+          <p class="note">Up to 9 tasks. Empty circles are added so you can write more by hand.</p>
+        </details>
+      </section>
+
+      <section class="mod" data-mod="photo">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include a photo">P</button>
+        <details><summary>Photo <span class="hint"></span></summary>
+          <div class="row">
+            <label class="filebtn">Choose a picture <input type="file" accept="image/*" data-file="photo"></label>
+            <button type="button" data-act="clear-photo">Remove picture</button>
+          </div>
+          <p class="note">A ticket, a screenshot, a face you like. It is printed in black and white; wide pictures are turned sideways to fill the panel.</p>
+        </details>
+      </section>
+
+      <section class="mod" data-mod="notes">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include notes">N</button>
+        <details><summary>Notes <span class="hint"></span></summary>
+          <label>Printed at the top of the notes panel (optional)
+            <textarea data-bind="notesText" rows="3" placeholder="Leave empty for a blank dot grid"></textarea></label>
+        </details>
+      </section>
+
+      <section class="mod" data-mod="weather">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include weather">W</button>
+        <details><summary>Weather <span class="hint"></span></summary>
+          <label>Town or city <input data-bind="weather.query" placeholder="Lisbon" enterkeyhint="search"></label>
+          <div class="row">
+            <button type="button" data-act="weather-find">Get forecast</button>
+            <button type="button" data-act="weather-here">Use my location</button>
+            <label class="inline">Units <select data-bind="weather.unit"><option value="C">°C</option><option value="F">°F</option></select></label>
+          </div>
+          <p class="status" data-status="weather" role="status"></p>
+          <p class="note">Forecast by Open-Meteo. No account or key needed.</p>
+        </details>
+      </section>
+
+      <section class="mod" data-mod="paperapp">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include a paper app">P</button>
+        <details><summary>Paper app <span class="hint"></span></summary>
+          <div class="apps" role="radiogroup" aria-label="Paper app"></div>
+          <div class="row" data-show="puzzle"><button type="button" data-act="new-puzzle">Make a new puzzle</button></div>
+          <div data-show="text">
+            <label>Page title <input data-bind="paperapp.title" maxlength="20" placeholder="Shopping"></label>
+            <label>Text <textarea data-bind="paperapp.text" rows="6" placeholder="Anything you want on paper: a list, a phrasebook, a poem"></textarea></label>
+          </div>
+        </details>
+      </section>
+
+      <section class="mod" data-mod="maps">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include a map">M</button>
+        <details><summary>Map and directions <span class="hint"></span></summary>
+          <label>From <input data-bind="maps.from" placeholder="Rossio station, Lisbon"></label>
+          <label>To <input data-bind="maps.to" placeholder="Castelo de São Jorge, Lisbon"></label>
+          <div class="row">
+            <label class="inline">Travel <select data-bind="maps.mode"><option value="foot">On foot</option><option value="bike">By bike</option><option value="car">By car</option></select></label>
+            <button type="button" data-act="route">Get directions</button>
+          </div>
+          <p class="status" data-status="maps" role="status"></p>
+          <p class="note">Printed on the back of the sheet, so print double sided (flip on the long edge). Map data from OpenStreetMap.</p>
+        </details>
+      </section>
+
+      <section class="mod" data-mod="contactless">
+        <button class="dot" type="button" aria-pressed="false" aria-label="Include card slot cut marks">C</button>
+        <details><summary>Card slot <span class="hint"></span></summary>
+          <p class="note">Adds four dotted cut lines around the paper app panel. Cut along them and the folded phone holds a bank or transit card.</p>
+        </details>
+      </section>
+    </div>
+
+    <footer class="foot">
+      <div class="row">
+        <button type="button" data-act="backup">Save a backup file</button>
+        <label class="filebtn">Restore a backup <input type="file" accept=".json,application/json" data-file="backup"></label>
+        <button type="button" data-act="reset">Start over</button>
+      </div>
+      <p class="note">Everything you type stays in this browser. A web version of <a href="https://experiments.withgoogle.com/paper-phone">Paper Phone</a> by Special Projects, Apache 2.0.</p>
+    </footer>
+  </div>
+
+  <div class="mat">
+    <div class="bar">
+      <button type="button" class="primary" data-act="print">Print or save as PDF</button>
+      <button type="button" data-act="fold">How to fold it</button>
+      <span class="status" data-status="main" role="status"></span>
+    </div>
+    <div class="pages" id="pages"></div>
+  </div>
+</main>
+
+<dialog id="fold">
+  <h2>Folding your Paper Phone</h2>
+  <ol>
+    <li>Lay the sheet printed side down (map side up, if you printed one). Fold it in half like closing a book, so the print is on the outside.</li>
+    <li>Fold the top edge down to the bottom edge, so the two small black squares meet on the inside.</li>
+    <li>Fold in half once more, with your name on the front cover.</li>
+  </ol>
+  <p>If you added the card slot, cut along the four dotted lines before folding and tuck your card into the corners.</p>
+  <p>When printing, choose landscape, 100% scale (not “fit to page”), and no headers or footers.</p>
+  <form method="dialog"><button class="primary">Close</button></form>
+</dialog>
+
+<dialog id="reset">
+  <h2>Start over?</h2>
+  <p>This clears your name, contacts, events, tasks, picture and route from this browser. It cannot be undone.</p>
+  <form method="dialog" class="row"><button class="primary" data-act="reset-yes">Clear everything</button><button>Keep my sheet</button></form>
+</dialog>
+
+<script src="js/tools.js"></script>
+<script src="js/sheet.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
