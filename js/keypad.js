@@ -33,7 +33,19 @@
   PP.PHONES = {
     a08: { name: "Samsung Galaxy A08", h: 167.4, w: 77.4, t: 8, diag: 6.7, ratio: "20:9", bezel: 3.5 },
     pixel3a: { name: "Google Pixel 3a", h: 151.3, w: 70.1, t: 8.2, diag: 5.6, ratio: "18.5:9", bezel: 10 },
+    // `win` is the camera opening of a case once the case is flipped onto the screen, in mm
+    // from the phone's top left as you face the screen. These are estimates: case makers differ,
+    // which is why window.html can trace the real opening.
+    iphone17: { name: "iPhone 17", h: 149.6, w: 71.5, t: 7.95, diag: 6.3, ratio: "2622:1206", bezel: 2.1, win: { x: 44.5, y: 5, w: 22, h: 44, r: 11 } },
+    iphone17pro: { name: "iPhone 17 Pro", h: 150, w: 71.9, t: 8.75, diag: 6.3, ratio: "2622:1206", bezel: 2.3, win: { x: 3, y: 3, w: 65.9, h: 36, r: 8 } },
   };
+  /** The window of a phone, in the units of a viewport `vw` wide that shows the whole screen. */
+  PP.windowRect = function (phone, vw, vh) {
+    const scr = PP.screenSize(phone.diag, phone.ratio), k = vw / scr.w, side = (phone.w - scr.w) / 2, g = phone.win;
+    const x = Math.max(0, (g.x - side) * k), y = Math.max(0, (g.y - phone.bezel) * k);
+    return { x, y, w: Math.min(vw - x, (g.x - side + g.w) * k - x), h: Math.min(vh - y, (g.y - phone.bezel + g.h) * k - y), r: g.r * k };
+  };
+
   /** Screen width and height in mm from its diagonal (inches) and ratio ("20:9"). */
   PP.screenSize = function (diag, ratio) {
     const p = String(ratio).split(":").map(Number);

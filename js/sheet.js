@@ -307,6 +307,7 @@
   PP.renderPages = function (s) {
     if (s.sheet === "envelope") return [PP.renderEnvelope(s)];
     if (s.sheet === "tent") return [PP.renderTent(s)];
+    if (s.sheet === "window") return [PP.renderEnvelope(PP.windowState(s))];
     const pages = [frontPage(s)];
     if (s.on.maps) pages.push(backPage(s));
     return pages;

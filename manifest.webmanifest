@@ -1,0 +1,15 @@
+{
+  "name": "Window – Paper Phone",
+  "short_name": "Window",
+  "description": "Use your phone through one small window.",
+  "start_url": "window.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "window-icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "window-icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

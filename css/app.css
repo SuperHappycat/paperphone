@@ -148,3 +148,8 @@ dialog li { margin-bottom: 8px; }
 .is-tent .mods { display: none; }
 label.check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: .9rem; }
 label.check input { min-height: 0; width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }
+
+/* four sheets: two rows of two */
+.sheetpick { grid-template-columns: 1fr 1fr; }
+.sheetpick button:nth-child(n+3) { border-top: 0; }
+.sheetpick button:nth-child(3) { border-left: 1px solid var(--ink); }

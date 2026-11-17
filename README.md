@@ -63,6 +63,18 @@ A third sheet, new to this fork, in the same spirit as the two experiments: a fo
 * `tent-demo.html` lets you try it on a computer: the tent seen from above, with a clickable “who's next”, dots that fill quickly, and a button that picks up a phone.
 * `tent.html?fast=1` runs the five-minute dots every three seconds, for trying it out.
 
+## Window
+
+After [Aperture](https://www.focuswithaperture.com/), Special Projects' concept of turning a phone case around so that only the camera opening leaves a piece of screen in reach. This is a working version for the iPhone 17 and iPhone 17 Pro.
+
+* `window.html` is a web app. On the iPhone, open it in Safari, choose Share, then Add to Home Screen, and start it from there so it fills the screen. It keeps working without a connection once it has been opened.
+* Everything it shows lives inside the window: a clock, a focus timer that fills with light instead of counting, a camera with only a shutter, a compass that points back to a saved place, a recipe or list one step at a time, and a face that dozes when the phone lies still. Swipe sideways to change, tap to use, hold three seconds to leave.
+* Case openings differ by maker. The app starts from an estimate for each phone and can be fitted exactly: put the turned-around case on and run a finger round the inside of the opening.
+* No case, or it will not go on backwards? The **Window** sheet prints a paper sleeve with the same opening on the front and a second one on the back for the cameras.
+* `window-demo.html` shows it on a computer.
+
+What it cannot do: show other apps (Messages, Instagram, Apple Music) in the window, which iPhones do not allow; or save photos straight to the photo library, so they wait in the app until the cover is off and are saved from its first screen.
+
 ## Privacy
 
 What you type is stored only in your browser (local storage). Nothing is sent anywhere except the place names you look up for weather and directions, which go to the services listed above. An imported address book is read in the page and is not stored.
@@ -71,7 +83,7 @@ The map tiles and lookups come from free community services; they are meant for 
 
 ## Files
 
-* `index.html`, `css/`, `js/` – the web app. `call.html` and `js/call.js` are the envelope keypad; `tent.html` and `js/tentpage.js` are the phone under the table tent; `js/tent.js` draws the tent. `js/vendor/qrcode.js` is Kazuhiko Arase's QR Code Generator (MIT). `js/sheet.js` draws the booklet as SVG, `js/envelope.js` draws the envelope, `js/keypad.js` holds the key layout both share, `js/tools.js` holds the puzzles, importers and lookups, `js/app.js` runs the page.
+* `index.html`, `css/`, `js/` – the web app. `call.html` and `js/call.js` are the envelope keypad; `window.html`, `js/window.js`, `sw.js` and `manifest.webmanifest` are the Window app; `tent.html` and `js/tentpage.js` are the phone under the table tent; `js/tent.js` draws the tent. `js/vendor/qrcode.js` is Kazuhiko Arase's QR Code Generator (MIT). `js/sheet.js` draws the booklet as SVG, `js/envelope.js` draws the envelope, `js/keypad.js` holds the key layout both share, `js/tools.js` holds the puzzles, importers and lookups, `js/app.js` runs the page.
 * `fonts/`, `paperapps/` – typefaces and paper app artwork from the original app.
 * `envelope-android/` – the Android keypad app for the envelope.
 * `android/` – the original Paper Phone Android source, unchanged.

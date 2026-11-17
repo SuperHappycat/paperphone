@@ -26,7 +26,19 @@
       <button type="button" data-sheet="booklet" aria-pressed="true">Folded booklet</button>
       <button type="button" data-sheet="envelope" aria-pressed="false">Phone envelope</button>
       <button type="button" data-sheet="tent" aria-pressed="false">Table tent</button>
+      <button type="button" data-sheet="window" aria-pressed="false">Window</button>
     </div>
+
+    <section class="envbox" data-when="window">
+      <p class="note lead">Cover the whole screen except one small window, and use only what fits in it: a clock, a focus timer, a camera, a compass, a list of steps, and a face. Turn your own case around so its camera hole sits over the screen, or print this paper sleeve with the same window.</p>
+      <label>iPhone <select data-bind="win.model"><option value="iphone17pro">iPhone 17 Pro</option><option value="iphone17">iPhone 17</option></select></label>
+      <p class="status" data-status="window" role="status"></p>
+      <div class="row">
+        <a class="filebtn" href="window.html">Open the Window app</a>
+        <a class="filebtn" href="window-demo.html">Try it on this computer</a>
+      </div>
+      <p class="note">On the iPhone, open the Window app in Safari, choose Share, then Add to Home Screen, and start it from there so it fills the screen. The paper sleeve is open at the top and has a second opening on the back for the cameras.</p>
+    </section>
 
     <section class="envbox" data-when="tent">
       <p class="note lead">A paper tent that covers everyone's phones for one meal. The last phone lies on top of the pile and lights the printed circles through the paper: it picks who answers, shows how long you have been at the table, and notices when a phone is picked up.</p>

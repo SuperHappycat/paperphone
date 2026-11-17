@@ -17,6 +17,7 @@
   function defaults() {
     return {
       name: "", date: today(), paper: "A4", sheet: "booklet",
+      win: { model: "iphone17pro" },
       tent: { meal: "Dinner", names: "", kids: false, question: "", game: "", last: null },
       env: Object.assign({ model: "a08", backTop: "contacts", backBottom: "calendar" }, PP.PHONES.a08),
       on: { contacts: true, calendar: true, tasks: true, photo: false, notes: true, weather: false, paperapp: true, maps: false, contactless: false },
@@ -63,11 +64,15 @@
   // ---- preview ---------------------------------------------------------------
   function render() {
     $("#pages").innerHTML = PP.renderPages(state).map((p, i) => `<figure class="page"><figcaption>${i ? "Back" : "Front"}</figcaption>${p}</figure>`).join("");
-    const env = state.sheet === "envelope", tent = state.sheet === "tent";
+    const win = state.sheet === "window", tent = state.sheet === "tent", env = state.sheet === "envelope" || win;
     $("#pages").classList.toggle("two", state.on.maps && !env && !tent);
     $("#pages").classList.toggle("portrait", env);
     $(".controls").classList.toggle("is-envelope", env);
-    $(".controls").classList.toggle("is-tent", tent);
+    $(".controls").classList.toggle("is-tent", tent || win);
+    if (win) {
+      const ws = PP.windowState(state), g = PP.envelopeFit(ws), w = ws.env.win;
+      say("window", g.fits ? `Sleeve for the ${ws.env.name}. Window ${w.w} × ${w.h} mm; the size is my estimate of a case's camera opening.` : `Too large for one ${state.paper} sheet.`, !g.fits);
+    }
     if (tent) {
       const g = PP.tentFit(state), n = g.people;
       say("tent", !g.fits ? `This phone is too large for a tent on one ${state.paper} sheet.` : n < 2 ? "Add at least two names." : `${n} people. Sized for the ${state.env.name}.`, !g.fits || n < 2);
@@ -75,7 +80,7 @@
     $$("[data-sheet]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sheet === state.sheet)));
     $$("[data-when]").forEach((el) => { el.hidden = el.dataset.when !== state.sheet; });
     $("#pagesize").textContent = `@page { size: ${state.paper === "Letter" ? "letter" : "A4"} ${env ? "portrait" : "landscape"}; margin: 0; }`;
-    if (env) {
+    if (env && !win) {
       const g = PP.envelopeFit(state), sc = PP.screenSize(state.env.diag, state.env.ratio);
       say("env", g.fits ? `Envelope ${Math.round(g.totalW)} × ${Math.round(g.totalH)} mm, screen ${sc.w.toFixed(1)} × ${sc.h.toFixed(1)} mm. Fits on ${state.paper}.` : `Too large for one ${state.paper} sheet.`, !g.fits);
     }
@@ -330,7 +335,7 @@
     fold: () => $("#fold").showModal(),
     print: () => {
       const old = document.title;
-      document.title = state.sheet === "tent" ? `Table tent - ${state.tent.meal || "Dinner"} ${state.date}` : state.sheet === "envelope" ? `Envelope - ${state.env.name}` : `${state.name.trim() || "My"} Paper Phone - ${state.date}`; // becomes the PDF file name
+      document.title = state.sheet === "window" ? `Paper window - ${PP.windowState(state).env.name}` : state.sheet === "tent" ? `Table tent - ${state.tent.meal || "Dinner"} ${state.date}` : state.sheet === "envelope" ? `Envelope - ${state.env.name}` : `${state.name.trim() || "My"} Paper Phone - ${state.date}`; // becomes the PDF file name
       window.print();
       document.title = old;
     },

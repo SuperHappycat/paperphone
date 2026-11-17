@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%277%27 y=%272%27 width=%2718%27 height=%2728%27 fill=%27%23fff%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3Cpath d=%27M11 9h10M11 14h10M11 19h6%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Window demo – Paper Phone</title>
+<meta name="description" content="Try the Paper Phone Window on a computer: an iPhone with its case turned around, used through the camera opening.">
+<link rel="stylesheet" href="css/app.css">
+<style>
+.demo-app { display: grid; grid-template-columns: minmax(300px, 430px) 1fr; min-height: 100vh; }
+.demo-text { padding: 28px 28px 40px; border-right: 1px solid var(--line); }
+.demo-text h1 { font-size: 2.2rem; line-height: 1.08; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 12px; }
+.demo-text p { margin: 0 0 12px; max-width: 34em; }
+.demo-text ul { margin: 0 0 14px; padding-left: 1.1em; }
+.demo-text li { margin-bottom: 6px; }
+.demo-text a { color: inherit; }
+.readout { border: 1px solid var(--ink); padding: 12px 14px; margin: 18px 0; min-height: 5.6em; }
+.readout b { display: block; font: 400 1.5rem/1.3 var(--display); letter-spacing: .04em; }
+.readout span { font-size: .85rem; color: var(--soft); }
+.seg { display: flex; }
+.seg button + button { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.stage { display: flex; justify-content: center; align-items: flex-start; padding: 28px 14px 40px; position: static; height: auto; min-height: 100vh; }
+.rig { position: relative; flex: none; }
+.phone { position: absolute; background: #16181b; border-radius: 44px; box-shadow: 0 16px 34px rgba(0,0,0,.35); }
+.phone iframe { position: absolute; border: 0; border-radius: 34px; background: #000; display: block; }
+.cover { position: absolute; inset: 0; pointer-events: none; transition: transform .45s ease, opacity .45s ease; }
+.cover svg { display: block; width: 100%; height: 100%; }
+.rig.lifted .cover { transform: translateY(-104%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .cover { transition: none; } }
+@media (max-width: 800px) { .demo-app { grid-template-columns: 1fr; } .demo-text { border-right: 0; padding: 22px 16px; } .stage { min-height: 0; } }
+</style>
+</head>
+<body>
+<main class="demo-app">
+  <div class="demo-text">
+    <h1>Window demo</h1>
+    <p>An iPhone with its case turned around, so the case covers the screen. The only part you can see or touch is the opening meant for the cameras.</p>
+    <ul>
+      <li>Drag sideways inside the window, or use the buttons, to change what it shows.</li>
+      <li>Click inside the window to use it: start the timer, take a photo, move to the next step, wake the face.</li>
+    </ul>
+    <div class="readout" role="status" aria-live="polite">
+      <b id="big">Clock</b>
+      <span id="line">Six things fit in the window. This box is only here for the demo.</span>
+    </div>
+    <div class="row">
+      <button type="button" id="prev">Previous</button>
+      <button type="button" class="primary" id="next">Next</button>
+    </div>
+    <div class="row"><div class="seg" id="model"><button type="button" data-v="iphone17pro" aria-pressed="true">iPhone 17 Pro</button><button type="button" data-v="iphone17" aria-pressed="false">iPhone 17</button></div></div>
+    <div class="row"><div class="seg" id="kind"><button type="button" data-v="case" aria-pressed="true">Case, turned around</button><button type="button" data-v="paper" aria-pressed="false">Paper sleeve</button></div></div>
+    <div class="row">
+      <button type="button" id="lift" aria-pressed="false">Take the cover off</button>
+      <a class="filebtn" href="index.html">Print a paper sleeve</a>
+    </div>
+    <p class="note">The camera and compass are stand-ins here: the demo does not use your webcam or location. The opening sizes are my estimates; on the phone, <a href="window.html">the Window app</a> can be fitted to your own case.</p>
+  </div>
+  <div class="mat stage"><div class="rig" id="rig"><div class="phone" id="phone"><iframe id="screen" title="iPhone screen behind the cover"></iframe></div><div class="cover" id="cover"></div></div></div>
+</main>
+<script src="js/keypad.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var NOTES = {
+    "Clock": "The time, and nothing else.",
+    "Focus timer": "Click the window to begin. It fills with light instead of counting down.",
+    "Camera": "Click the window to take a photo. There is a shutter and no gallery.",
+    "Compass": "The arrow points back to a place you saved before the cover went on.",
+    "Steps": "A recipe or a list, one step at a time. Click the right side for the next step, the left side to go back.",
+    "Face": "It blinks, dozes off when the phone lies still, and wakes when it is picked up. Click it."
+  };
+  var model = "iphone17pro", kind = "case", frame = $("screen");
+
+  function build() {
+    var p = PP.PHONES[model], scr = PP.screenSize(p.diag, p.ratio), k = 300 / scr.w, m = 2 * k; // the cover is 2 mm bigger all round
+    var bw = p.w * k, bh = p.h * k, sw = scr.w * k, sh = scr.h * k;
+    var rig = $("rig"), phone = $("phone");
+    rig.style.width = bw + 2 * m + "px"; rig.style.height = bh + 2 * m + "px";
+    phone.style.left = phone.style.top = m + "px"; phone.style.width = bw + "px"; phone.style.height = bh + "px";
+    frame.style.left = (bw - sw) / 2 + "px"; frame.style.top = p.bezel * k + "px"; frame.style.width = sw + "px"; frame.style.height = sh + "px";
+    frame.src = "window.html?demo=1&model=" + model;
+    var w = p.win, x = m + w.x * k, y = m + w.y * k, ww = w.w * k, wh = w.h * k, r = w.r * k, W = bw + 2 * m, H = bh + 2 * m;
+    var rr = function (x, y, w, h, r) { return "M" + (x + r) + " " + y + "h" + (w - 2 * r) + "a" + r + " " + r + " 0 0 1 " + r + " " + r + "v" + (h - 2 * r) + "a" + r + " " + r + " 0 0 1 -" + r + " " + r + "h-" + (w - 2 * r) + "a" + r + " " + r + " 0 0 1 -" + r + " -" + r + "v-" + (h - 2 * r) + "a" + r + " " + r + " 0 0 1 " + r + " -" + r + "z"; };
+    var fill = kind === "case" ? "#3a4a57" : "#ece9e1", edge = kind === "case" ? "#2b3842" : "#c9c5b9", corner = kind === "case" ? 50 : 6;
+    $("cover").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + " " + H + '"><path fill-rule="evenodd" fill="' + fill + '" stroke="' + edge + '" stroke-width="1.5" d="' + rr(1, 1, W - 2, H - 2, corner) + rr(x, y, ww, wh, r) + '"/></svg>';
+  }
+
+  window.addEventListener("message", function (e) {
+    if (e.source !== frame.contentWindow || !e.data || !e.data.paperphone) return;
+    if (e.data.type === "app") { $("big").textContent = e.data.name; $("line").textContent = NOTES[e.data.name] || ""; }
+    if (e.data.type === "note") $("line").textContent = e.data.text;
+  });
+  var send = function (type) { frame.contentWindow.postMessage({ paperphone: true, type: type }, "*"); };
+  $("next").addEventListener("click", function () { send("next"); });
+  $("prev").addEventListener("click", function () { send("prev"); });
+  function seg(id, set) {
+    $(id).addEventListener("click", function (e) {
+      var v = e.target.dataset.v; if (!v) return;
+      set(v);
+      Array.prototype.forEach.call($(id).children, function (b) { b.setAttribute("aria-pressed", String(b.dataset.v === v)); });
+      build();
+    });
+  }
+  seg("model", function (v) { model = v; });
+  seg("kind", function (v) { kind = v; });
+  $("lift").addEventListener("click", function () {
+    var off = $("rig").classList.toggle("lifted");
+    $("lift").setAttribute("aria-pressed", String(off));
+    $("lift").textContent = off ? "Put the cover back" : "Take the cover off";
+  });
+  build();
+})();
+</script>
+</body>
+</html>

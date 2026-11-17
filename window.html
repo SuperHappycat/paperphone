@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%277%27 y=%272%27 width=%2718%27 height=%2728%27 fill=%27%23fff%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3Cpath d=%27M11 9h10M11 14h10M11 19h6%27 stroke=%27%231d1d1d%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Window">
+<link rel="apple-touch-icon" href="window-icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Window – Paper Phone</title>
+<style>
+@font-face { font-family: Varela; src: url(fonts/varela_regular.otf) format("opentype"); }
+@font-face { font-family: "Work Sans"; src: url(fonts/worksans_regular.ttf) format("truetype"); }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; color: #fff; font: 16px/1.5 "Work Sans", sans-serif;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+body { overscroll-behavior: none; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid #6aa9ff; outline-offset: 3px; }
+
+/* setup: used with the cover off */
+#setup { position: fixed; inset: 0; overflow: auto; padding: calc(env(safe-area-inset-top) + 28px) 24px calc(env(safe-area-inset-bottom) + 40px); }
+#setup h1 { font: 400 2rem/1.1 Varela, sans-serif; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 8px; }
+#setup h2 { font: 400 1.05rem Varela, sans-serif; margin: 26px 0 6px; }
+#setup p { margin: 0 0 10px; color: #c9c9c9; max-width: 34em; }
+#setup p.small { font-size: .85rem; color: #9a9a9a; }
+#setup button, #setup textarea { font: inherit; color: #fff; background: #000; border: 1px solid #fff; border-radius: 0; padding: 10px 14px; min-height: 44px; }
+#setup button[aria-pressed="true"] { background: #fff; color: #000; }
+#setup button.primary { background: #f3c53a; color: #000; border-color: #f3c53a; font: 1.05rem Varela, sans-serif; letter-spacing: .04em; padding: 14px 22px; margin-top: 28px; }
+#setup textarea { width: 100%; -webkit-user-select: text; user-select: text; }
+.seg { display: flex; flex-wrap: wrap; gap: 0; }
+.seg button + button { border-left: 0; }
+.stepper { display: flex; align-items: center; gap: 14px; font: 1.3rem Varela, sans-serif; }
+#photos { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+#photos img { width: 72px; height: 72px; object-fit: cover; border: 1px solid #555; }
+#setup a { color: inherit; }
+
+/* the window: everything else on the screen stays black and is under the cover */
+#stage { position: fixed; inset: 0; background: #000; touch-action: none; }
+#win { position: absolute; overflow: hidden; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; text-align: center; }
+#dots { position: absolute; left: 0; right: 0; bottom: 4px; display: flex; justify-content: center; gap: 4px; pointer-events: none; }
+#dots i { width: 4px; height: 4px; border-radius: 50%; background: #fff; opacity: .3; }
+#dots i.on { opacity: 1; }
+#app { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+#app .big { font-family: Varela, sans-serif; line-height: 1; letter-spacing: .02em; }
+#app .sub { position: absolute; left: 0; right: 0; bottom: 12px; font-size: 11px; letter-spacing: .08em; color: #bbb; }
+#app .fill { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; }
+#app .ring { border: 2px solid #fff; border-radius: 50%; }
+#app.done { animation: pulse 1s steps(2, start) infinite; }
+@keyframes pulse { 50% { background: #fff; } }
+#app video, #app canvas.view { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.05); }
+#app .flash { position: absolute; inset: 0; background: #fff; opacity: 0; transition: opacity .25s; pointer-events: none; }
+#app .step { padding: 8px 12px 18px; font-family: Varela, sans-serif; line-height: 1.2; overflow: hidden; max-height: 100%; }
+#hint { position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 24px); text-align: center; font-size: .8rem; color: #666; padding: 0 24px; }
+#trace { position: fixed; inset: 0; background: #000; touch-action: none; display: flex; align-items: center; justify-content: center; text-align: center; padding: 30px; color: #999; }
+@media (prefers-reduced-motion: reduce) { #app.done { animation: none; background: #fff; } }
+</style>
+</head>
+<body>
+<div id="setup">
+  <h1>Window</h1>
+  <p>Cover the whole screen except one small window, and use only what fits in it. Set things up here with the cover off.</p>
+  <p class="small" id="install" hidden>For this to line up, it has to fill the screen: in Safari choose Share, then Add to Home Screen, and open Window from there.</p>
+
+  <h2>Phone</h2>
+  <div class="seg" id="model"><button type="button" data-v="iphone17pro">iPhone 17 Pro</button><button type="button" data-v="iphone17">iPhone 17</button></div>
+
+  <h2>Cover</h2>
+  <div class="seg" id="cover"><button type="button" data-v="case">My case, turned around</button><button type="button" data-v="paper">Printed paper sleeve</button></div>
+  <p class="small" id="fitline"></p>
+  <button type="button" id="fit">Fit the window to my case</button>
+
+  <h2>Focus timer</h2>
+  <div class="stepper"><button type="button" id="less" aria-label="Five minutes less">−</button><span id="mins">25 min</span><button type="button" id="more" aria-label="Five minutes more">+</button></div>
+
+  <h2>Compass</h2>
+  <p class="small" id="placeline"></p>
+  <button type="button" id="place">Point back to where I am now</button>
+
+  <h2>Steps</h2>
+  <p class="small">A recipe or a list, one step per line. The window shows one at a time.</p>
+  <textarea id="steps" rows="5" placeholder="Boil the water&#10;Add the pasta&#10;Stir after two minutes"></textarea>
+
+  <h2>Photos taken through the window</h2>
+  <p class="small" id="photoline"></p>
+  <div id="photos"></div>
+  <button type="button" id="clearphotos" hidden>Delete these photos</button>
+
+  <div><button type="button" class="primary" id="start">Start</button></div>
+  <p class="small" id="startline"></p>
+  <p class="small">In the window: swipe sideways to change what it shows, tap to use it, and hold for three seconds to come back here. <a href="index.html">Back to Paper Phone</a></p>
+</div>
+
+<div id="trace" hidden><p id="tracetext"></p></div>
+
+<div id="stage" hidden>
+  <div id="win"><div id="app"></div><div id="dots"></div></div>
+  <p id="hint">Hold the window for three seconds to leave.</p>
+</div>
+
+<script src="js/keypad.js"></script>
+<script src="js/window.js"></script>
+</body>
+</html>
